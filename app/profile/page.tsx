@@ -1,13 +1,13 @@
 "use client"
 
-import { useState } from "react"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { MapPin, Briefcase, Mail, Globe, Github, Linkedin, Edit, Plus } from "lucide-react"
 import { Progress } from "@/components/ui/progress"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Briefcase, Edit, Github, Globe, Linkedin, Mail, MapPin, Plus } from "lucide-react"
+import { useState } from "react"
 
 // Mock data for demonstration
 const mockUser = {
@@ -92,7 +92,7 @@ export default function ProfilePage() {
               </Avatar>
               <div className="flex gap-2 mb-4">
                 <Button variant="outline" size="sm">
-                  <Edit className="h-4 w-4 mr-2" />
+                  <Edit className="h-4 w-4 mr-2" onClick={() => setProfileCompletion(88)} />
                   Edit Profile
                 </Button>
                 <Button size="sm">

@@ -2,14 +2,13 @@
 
 import type React from "react"
 
-import { useState, useRef, useEffect } from "react"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Send, Sparkles, ArrowRight } from "lucide-react"
-import { Badge } from "@/components/ui/badge"
-import { useMobile } from "@/hooks/use-mobile"
+import { ArrowRight, Send, Sparkles } from "lucide-react"
+import { useEffect, useRef, useState } from "react"
 
 // Mock data for demonstration
 const mockContact = {
@@ -81,7 +80,6 @@ export default function SmartRepliesPage() {
   const [input, setInput] = useState("")
   const [smartReplies, setSmartReplies] = useState<string[]>([])
   const scrollAreaRef = useRef<HTMLDivElement>(null)
-  const isMobile = useMobile()
 
   useEffect(() => {
     // Generate smart replies based on the last message
@@ -187,15 +185,13 @@ export default function SmartRepliesPage() {
                   </Avatar>
                 )}
                 <div
-                  className={`max-w-[80%] px-4 py-2 rounded-lg ${
-                    msg.senderId === "me" ? "bg-primary text-primary-foreground" : "bg-muted"
-                  }`}
+                  className={`max-w-[80%] px-4 py-2 rounded-lg ${msg.senderId === "me" ? "bg-primary text-primary-foreground" : "bg-muted"
+                    }`}
                 >
                   <p>{msg.text}</p>
                   <p
-                    className={`text-xs mt-1 ${
-                      msg.senderId === "me" ? "text-primary-foreground/70" : "text-muted-foreground"
-                    }`}
+                    className={`text-xs mt-1 ${msg.senderId === "me" ? "text-primary-foreground/70" : "text-muted-foreground"
+                      }`}
                   >
                     {msg.time}
                   </p>

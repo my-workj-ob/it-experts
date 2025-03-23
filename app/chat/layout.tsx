@@ -2,14 +2,14 @@
 
 import type React from "react"
 
-import { useState } from "react"
-import Link from "next/link"
-import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { MessageSquare, Bot, Sparkles, Users, Search, Menu, X } from "lucide-react"
 import { useMobile } from "@/hooks/use-mobile"
 import { cn } from "@/lib/utils"
+import { Bot, Menu, MessageSquare, Search, Sparkles, Users, X } from "lucide-react"
+import Link from "next/link"
+import { usePathname } from "next/navigation"
+import { useState } from "react"
 
 export default function ChatLayout({
   children,
@@ -75,6 +75,7 @@ export default function ChatLayout({
             onValueChange={(value) => {
               if (isMobile) {
                 setShowSidebar(false)
+                console.log(value)
               }
             }}
           >

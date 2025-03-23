@@ -1,11 +1,9 @@
 "use client"
 
-import Link from "next/link"
-import { useState } from "react"
-import { Bell, Search, Zap } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { ModeToggle } from "@/components/mode-toggle"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,13 +12,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { ModeToggle } from "@/components/mode-toggle"
-import { Badge } from "@/components/ui/badge"
-import { usePathname } from "next/navigation"
+import { Input } from "@/components/ui/input"
+import { Bell, Search, Zap } from "lucide-react"
+import Link from "next/link"
+import { useState } from "react"
 
 export default function Navbar() {
   const [isLoggedIn, setIsLoggedIn] = useState(true) // Set to true for demo
-  const pathname = usePathname()
 
   return (
     <header className="sticky top-0 z-30 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">

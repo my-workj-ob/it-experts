@@ -1,11 +1,5 @@
 "use client"
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Separator } from "@/components/ui/separator"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,8 +11,14 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { CreditCard, Download, Calendar, Clock, AlertCircle, ArrowUpRight, Check } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Separator } from "@/components/ui/separator"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { AlertCircle, ArrowUpRight, Calendar, Check, Clock, CreditCard, Download } from "lucide-react"
 import Link from "next/link"
+import { useState } from "react"
 
 export default function SubscriptionPage() {
   const [activeTab, setActiveTab] = useState("overview")
@@ -110,7 +110,7 @@ export default function SubscriptionPage() {
                         <AlertDialogTitle>Are you sure you want to cancel?</AlertDialogTitle>
                         <AlertDialogDescription>
                           Your subscription will remain active until the end of your current billing period on{" "}
-                          {subscription.nextBillingDate}. After that, you'll be downgraded to the Free plan.
+                          {subscription.nextBillingDate}. After that, you&apos;ll be downgraded to the Free plan.
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>

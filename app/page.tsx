@@ -1,7 +1,8 @@
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { ArrowRight, Users, Calendar, MessageSquare, Zap, CheckCircle, Star, Shield, Sparkles } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { ArrowRight, Calendar, CheckCircle, MessageSquare, Shield, Sparkles, Star, Users, Zap } from "lucide-react"
+import Image from "next/image"
+import Link from "next/link"
 
 export default function LandingPage() {
   return (
@@ -57,7 +58,7 @@ export default function LandingPage() {
 
             <div className="mt-16 relative">
               <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent h-20 bottom-0 z-10"></div>
-              <img
+              <Image
                 src="/placeholder.svg?height=600&width=1200"
                 alt="DevConnect Platform"
                 className="rounded-lg shadow-xl mx-auto border"
@@ -215,8 +216,8 @@ export default function LandingPage() {
                   <Star className="h-5 w-5 text-yellow-500" />
                 </div>
                 <p className="text-muted-foreground mb-4">
-                  "DevConnect helped me find the perfect team members for my startup. The AI matching is incredibly
-                  accurate!"
+                  &ldquo;DevConnect helped me find the perfect team members for my startup. The AI matching is incredibly
+                  accurate!&ldquo;
                 </p>
                 <div className="flex items-center">
                   <div className="h-10 w-10 rounded-full bg-muted mr-3">
@@ -238,8 +239,8 @@ export default function LandingPage() {
                   <Star className="h-5 w-5 text-yellow-500" />
                 </div>
                 <p className="text-muted-foreground mb-4">
-                  "I've attended several events through DevConnect and made valuable connections that led to job
-                  opportunities."
+                  &ldquo;I&apos;ve attended several events through DevConnect and made valuable connections that led to job
+                  opportunities.&ldquo;
                 </p>
                 <div className="flex items-center">
                   <div className="h-10 w-10 rounded-full bg-muted mr-3">
@@ -261,8 +262,8 @@ export default function LandingPage() {
                   <Star className="h-5 w-5 text-yellow-500" />
                 </div>
                 <p className="text-muted-foreground mb-4">
-                  "The AI assistant helped me optimize my profile and I've received more connection requests than ever
-                  before!"
+                  &ldquo;The AI assistant helped me optimize my profile and I&apos;ve received more connection requests than ever
+                  before!&ldquo;
                 </p>
                 <div className="flex items-center">
                   <div className="h-10 w-10 rounded-full bg-muted mr-3">

@@ -1,19 +1,29 @@
 "use client"
 
-import { useState } from "react"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Users, MessageSquare, Calendar, Briefcase, TrendingUp, Eye, ThumbsUp, Bell, MapPin } from "lucide-react"
 import { Progress } from "@/components/ui/progress"
+import { Bell, Briefcase, Calendar, Eye, MapPin, MessageSquare, ThumbsUp, TrendingUp, Users } from "lucide-react"
 import Link from "next/link"
+import { useEffect, useState } from "react"
 
 export default function DashboardPage() {
   const [profileViews, setProfileViews] = useState(124)
   const [connections, setConnections] = useState(37)
   const [messages, setMessages] = useState(12)
   const [events, setEvents] = useState(5)
+
+
+  useEffect(() => {
+    if ((profileViews && connections && messages && events) === undefined) {
+      setProfileViews(1)
+      setConnections(1)
+      setMessages(1)
+      setEvents(1)
+    }
+  }, [])
 
   return (
     <div className="container mx-auto space-y-6">

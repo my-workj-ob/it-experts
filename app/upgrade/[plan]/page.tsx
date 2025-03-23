@@ -2,19 +2,19 @@
 
 import type React from "react"
 
-import { useState } from "react"
-import { useParams, useRouter } from "next/navigation"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Badge } from "@/components/ui/badge"
-import { Switch } from "@/components/ui/switch"
 import { Separator } from "@/components/ui/separator"
-import { Check, ArrowLeft, Lock } from "lucide-react"
+import { Switch } from "@/components/ui/switch"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { ArrowLeft, Check, Lock } from "lucide-react"
 import Link from "next/link"
+import { useParams, useRouter } from "next/navigation"
+import { useEffect, useState } from "react"
 
 export default function UpgradePage() {
   const params = useParams()
@@ -25,6 +25,9 @@ export default function UpgradePage() {
 
   const planName = typeof params.plan === "string" ? params.plan : ""
 
+  useEffect(() => {
+    console.log(paymentMethod);
+  }, [])
   const plans = {
     pro: {
       name: "Pro",
@@ -211,7 +214,7 @@ export default function UpgradePage() {
               </div>
 
               <div className="space-y-2 mt-6">
-                <h3 className="font-medium">What's included:</h3>
+                <h3 className="font-medium">What&apos;s included:</h3>
                 <ul className="space-y-2">
                   {currentPlan.features.map((feature, index) => (
                     <li key={index} className="flex items-start">

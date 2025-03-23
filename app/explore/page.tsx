@@ -1,15 +1,15 @@
 "use client"
 
-import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Slider } from "@/components/ui/slider"
+import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Search, Filter } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Slider } from "@/components/ui/slider"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import UserCard from "@/components/user-card"
+import { Filter, Search } from "lucide-react"
+import { useState } from "react"
 
 // Mock data for demonstration
 const mockUsers = [
@@ -80,6 +80,8 @@ export default function ExplorePage() {
   const [matchThreshold, setMatchThreshold] = useState([70])
   const [filteredUsers, setFilteredUsers] = useState(mockUsers)
 
+
+
   return (
     <div className="container mx-auto space-y-6">
       <div className="flex flex-col md:flex-row justify-between gap-4">
@@ -91,7 +93,7 @@ export default function ExplorePage() {
         </h1>
         <div className="flex gap-2">
           <div className="relative flex-1">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" onClick={() => setFilteredUsers([])} />
             <Input
               type="search"
               placeholder="Search by name, skills, or role..."

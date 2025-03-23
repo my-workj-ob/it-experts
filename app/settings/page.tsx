@@ -1,34 +1,34 @@
 "use client"
 
-import { useState } from "react"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Separator } from "@/components/ui/separator"
+import { Slider } from "@/components/ui/slider"
 import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Separator } from "@/components/ui/separator"
-import { Badge } from "@/components/ui/badge"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Slider } from "@/components/ui/slider"
 import {
-  User,
   Bell,
-  Shield,
-  Globe,
-  Smartphone,
-  Key,
-  LogOut,
-  Trash2,
-  Upload,
-  Plus,
-  Github,
-  Linkedin,
-  Twitter,
   Eye,
   EyeOff,
+  Github,
+  Globe,
+  Key,
+  Linkedin,
+  LogOut,
+  Plus,
+  Shield,
+  Smartphone,
+  Trash2,
+  Twitter,
+  Upload,
+  User,
 } from "lucide-react"
+import { useState } from "react"
 
 export default function SettingsPage() {
   const [showPassword, setShowPassword] = useState(false)
@@ -192,7 +192,7 @@ export default function SettingsPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-medium">Project Invitations</p>
-                  <p className="text-sm text-muted-foreground">Receive emails when you're invited to join a project</p>
+                  <p className="text-sm text-muted-foreground">Receive emails when you&apos;re invited to join a project</p>
                 </div>
                 <Switch checked={emailNotifications} onCheckedChange={setEmailNotifications} />
               </div>
@@ -201,7 +201,7 @@ export default function SettingsPage() {
                 <div>
                   <p className="font-medium">Event Reminders</p>
                   <p className="text-sm text-muted-foreground">
-                    Receive emails about upcoming events you've registered for
+                    Receive emails about upcoming events you&apos;ve registered for
                   </p>
                 </div>
                 <Switch checked={emailNotifications} onCheckedChange={setEmailNotifications} />
@@ -244,7 +244,7 @@ export default function SettingsPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-medium">Project Updates</p>
-                  <p className="text-sm text-muted-foreground">Receive notifications about projects you're part of</p>
+                  <p className="text-sm text-muted-foreground">Receive notifications about projects you&apos;re part of</p>
                 </div>
                 <Switch checked={pushNotifications} onCheckedChange={setPushNotifications} />
               </div>
@@ -303,7 +303,7 @@ export default function SettingsPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-medium">Show Online Status</p>
-                  <p className="text-sm text-muted-foreground">Show when you're active on the platform</p>
+                  <p className="text-sm text-muted-foreground">Show when you&apos;re active on the platform</p>
                 </div>
                 <Switch defaultChecked={true} />
               </div>

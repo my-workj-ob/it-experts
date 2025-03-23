@@ -1,13 +1,13 @@
 "use client"
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Search, Filter, Plus } from "lucide-react"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import ProjectCard from "@/components/project-card"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Filter, Plus, Search } from "lucide-react"
+import { useEffect, useState } from "react"
 
 // Mock data for demonstration
 const mockProjects = [
@@ -88,6 +88,12 @@ const mockProjects = [
 export default function ProjectsPage() {
   const [showFilters, setShowFilters] = useState(false)
   const [filteredProjects, setFilteredProjects] = useState(mockProjects)
+
+  useEffect(() => {
+    if (filteredProjects) {
+      setFilteredProjects(mockProjects)
+    }
+  }, [])
 
   return (
     <div className="container mx-auto space-y-6">

@@ -1,13 +1,13 @@
 "use client"
 
-import { useState } from "react"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Switch } from "@/components/ui/switch"
-import { Check, X, Zap, CreditCard } from "lucide-react"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Check, CreditCard, X, Zap } from "lucide-react"
 import Link from "next/link"
+import { useState } from "react"
 
 export default function PricingPage() {
   const [billingCycle, setBillingCycle] = useState<"monthly" | "annual">("monthly")
@@ -302,9 +302,9 @@ export default function PricingPage() {
                 </p>
               </div>
               <div className="space-y-2">
-                <h3 className="text-lg font-medium">Can I get a refund if I'm not satisfied?</h3>
+                <h3 className="text-lg font-medium">Can I get a refund if I&apos;m not satisfied?</h3>
                 <p className="text-muted-foreground">
-                  We offer a 30-day money-back guarantee for all paid plans. If you're not satisfied, contact our
+                  We offer a 30-day money-back guarantee for all paid plans. If you&apos;re not satisfied, contact our
                   support team.
                 </p>
               </div>
