@@ -1,14 +1,14 @@
 "use client"
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Filter, Search, Plus } from "lucide-react"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import EventCard from "@/components/event-card"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Filter, Plus, Search } from "lucide-react"
 import Link from "next/link"
+import { useState } from "react"
 
 // Mock data for demonstration
 const mockEvents = [
@@ -94,7 +94,7 @@ export default function EventsPage() {
     <div className="container mx-auto space-y-6">
       <div className="flex flex-col md:flex-row justify-between gap-4">
         <h1 className="text-3xl font-bold">
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-indigo-600">Events</span> &
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-indigo-600" onClick={() => setFilteredEvents(mockEvents)}>Events</span> &
           Meetups
         </h1>
         <div className="flex gap-2">
