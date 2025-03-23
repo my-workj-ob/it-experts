@@ -59,6 +59,8 @@ export default function LandingPage() {
             <div className="mt-16 relative">
               <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent h-20 bottom-0 z-10"></div>
               <Image
+                width={1200}
+                height={600}
                 src="/placeholder.svg?height=600&width=1200"
                 alt="DevConnect Platform"
                 className="rounded-lg shadow-xl mx-auto border"
