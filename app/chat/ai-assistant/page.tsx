@@ -1,20 +1,28 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client"
 
-import type React from "react"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { toast } from "@/components/ui/use-toast";
+import { cn } from "@/lib/utils";
+import { Bot, Copy, Loader2, RefreshCw, Send, Sparkles, ThumbsDown, ThumbsUp, User } from "lucide-react";
+import type React from "react";
+import { useEffect, useRef, useState } from "react";
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { atomDark } from "react-syntax-highlighter/dist/esm/styles/prism";
+import remarkGfm from "remark-gfm";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { toast } from "@/components/ui/use-toast"
-import { cn } from "@/lib/utils"
-import { Bot, Copy, Loader2, RefreshCw, Send, Sparkles, ThumbsDown, ThumbsUp, User } from "lucide-react"
-import { useEffect, useRef, useState } from "react"
+// Suggested prompts for the AI assistant\]
+import DOMPurify from "isomorphic-dompurify"; // SSR muammosiz ishlaydi
 
-// Suggested prompts for the AI assistant
+import dynamic from "next/dynamic";
+const ReactMarkdown = dynamic(() => import("react-markdown"), { ssr: false });
+
 const suggestedPrompts = [
   "Suggest project ideas based on my skills",
   "Help me write a connection message",
@@ -32,6 +40,7 @@ type Message = {
   role: "user" | "assistant";
   content: string;
 };
+
 
 // Custom hook for chat functionality
 function useCustomChat() {
@@ -51,6 +60,7 @@ function useCustomChat() {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInput(e.target.value)
   }
+
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
@@ -168,6 +178,47 @@ function useCustomChat() {
   }
 }
 
+
+const MessageRenderer: React.FC<{ message: Message }> = ({ message }) => {
+  const [sanitizedContent, setSanitizedContent] = useState("");
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setSanitizedContent(
+        typeof message.content === "object"
+          ? DOMPurify.sanitize(JSON.stringify(message.content, null, 2))
+          : DOMPurify.sanitize(message.content)
+      );
+    }
+  }, [message.content]);
+
+  return (
+    <ReactMarkdown
+      remarkPlugins={[remarkGfm]}
+      components={{
+        pre: ({ children }) => <>{children}</>,
+        code({ className, children }) {
+          const match = /language-(\w+)/.exec(className || "");
+          return match ? (
+            <SyntaxHighlighter style={atomDark} language={match[1]} PreTag="div">
+              {String(children).replace(/\n$/, "")}
+            </SyntaxHighlighter>
+          ) : (
+            <code className="bg-gray-800 text-white px-1 py-0.5 rounded">{children}</code>
+          );
+        },
+        a: ({ href, children }) => (
+          <a href={href} target="_blank" rel="noopener noreferrer" className="text-blue-500 underline">
+            {children}
+          </a>
+        ),
+      }}
+    >
+      {sanitizedContent}
+    </ReactMarkdown>
+  );
+};
+
 export default function AIChatPage() {
   const scrollAreaRef = useRef<HTMLDivElement>(null)
   const [copied, setCopied] = useState<string | null>(null)
@@ -207,8 +258,8 @@ export default function AIChatPage() {
   }
 
   return (
-    <div className="container mx-auto h-[calc(100vh-4rem)] flex flex-col">
-      <div className="flex-1 flex flex-col md:flex-row gap-4 overflow-hidden">
+    <div className="container w-auto mx-auto h-[calc(100vh-4rem)] flex flex-col">
+      <div className="flex-1 w-[1100px] flex flex-col md:flex-row gap-4 overflow-hidden">
         {/* Main chat area */}
         <div className="flex-1 flex flex-col border rounded-lg overflow-hidden">
           <div className="p-4 border-b bg-muted/30 flex items-center justify-between">
@@ -231,7 +282,7 @@ export default function AIChatPage() {
 
           <ScrollArea className="flex-1 p-4" ref={scrollAreaRef}>
             <div className="space-y-4">
-              {messages.map((message) => (
+              {messages.map((message: any) => (
                 <div key={message.id} className={cn("flex", message.role === "user" ? "justify-end" : "justify-start")}>
                   <div className="flex gap-3 max-w-[80%]">
                     {message.role === "assistant" && (
@@ -256,7 +307,9 @@ export default function AIChatPage() {
                         message.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted",
                       )}
                     >
-                      <p className="whitespace-pre-line">{message.content}</p>
+                      {/* Markdown render qilingan xabarlar */}
+                      <MessageRenderer message={message} />
+                      {/* Quyidagi tugmalar faqat assistant xabarlariga qo‘shiladi */}
                       <div className="flex justify-between items-center mt-2">
                         <p
                           className={cn(
@@ -290,6 +343,7 @@ export default function AIChatPage() {
                 </div>
               ))}
 
+              {/* Yozilayotgan xabarni animatsiya qilish */}
               {isLoading && (
                 <div className="flex justify-start">
                   <div className="flex gap-3 max-w-[80%]">
@@ -309,6 +363,7 @@ export default function AIChatPage() {
                 </div>
               )}
 
+              {/* Xatolik holati */}
               {error && (
                 <div className="p-4 rounded-lg bg-destructive/10 text-destructive">
                   <p>Error: {error.message || "Something went wrong. Please try again."}</p>
