@@ -1,7 +1,17 @@
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { ArrowRight, Calendar, CheckCircle, MessageSquare, Shield, Sparkles, Star, Users, Zap } from "lucide-react"
-import Image from "next/image"
+import {
+  ArrowRight,
+  Calendar,
+  CheckCircle,
+  MessageSquare,
+  Shield,
+  Sparkles,
+  Star,
+  Users,
+  Video,
+  Zap,
+} from "lucide-react"
 import Link from "next/link"
 
 export default function LandingPage() {
@@ -58,9 +68,7 @@ export default function LandingPage() {
 
             <div className="mt-16 relative">
               <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent h-20 bottom-0 z-10"></div>
-              <Image
-                width={1200}
-                height={600}
+              <img
                 src="/placeholder.svg?height=600&width=1200"
                 alt="DevConnect Platform"
                 className="rounded-lg shadow-xl mx-auto border"
@@ -148,6 +156,16 @@ export default function LandingPage() {
                   Work together on projects with secure tools and protected intellectual property.
                 </p>
               </div>
+              <div className="bg-card rounded-lg p-6 shadow-sm border hover:shadow-md transition-shadow">
+                <div className="h-12 w-12 rounded-full bg-gradient-to-r from-primary/20 to-indigo-500/20 flex items-center justify-center mb-4">
+                  <Video className="h-6 w-6 text-primary" />
+                </div>
+                <h3 className="text-xl font-semibold mb-2">Video Content</h3>
+                <p className="text-muted-foreground">
+                  Watch and share educational videos, tutorials, and short-form content to enhance your learning and
+                  showcase your expertise.
+                </p>
+              </div>
             </div>
           </div>
         </section>
@@ -218,8 +236,8 @@ export default function LandingPage() {
                   <Star className="h-5 w-5 text-yellow-500" />
                 </div>
                 <p className="text-muted-foreground mb-4">
-                  &ldquo;DevConnect helped me find the perfect team members for my startup. The AI matching is incredibly
-                  accurate!&ldquo;
+                  "DevConnect helped me find the perfect team members for my startup. The AI matching is incredibly
+                  accurate!"
                 </p>
                 <div className="flex items-center">
                   <div className="h-10 w-10 rounded-full bg-muted mr-3">
@@ -241,8 +259,8 @@ export default function LandingPage() {
                   <Star className="h-5 w-5 text-yellow-500" />
                 </div>
                 <p className="text-muted-foreground mb-4">
-                  &ldquo;I&apos;ve attended several events through DevConnect and made valuable connections that led to job
-                  opportunities.&ldquo;
+                  "I've attended several events through DevConnect and made valuable connections that led to job
+                  opportunities."
                 </p>
                 <div className="flex items-center">
                   <div className="h-10 w-10 rounded-full bg-muted mr-3">
@@ -264,8 +282,8 @@ export default function LandingPage() {
                   <Star className="h-5 w-5 text-yellow-500" />
                 </div>
                 <p className="text-muted-foreground mb-4">
-                  &ldquo;The AI assistant helped me optimize my profile and I&apos;ve received more connection requests than ever
-                  before!&ldquo;
+                  "The AI assistant helped me optimize my profile and I've received more connection requests than ever
+                  before!"
                 </p>
                 <div className="flex items-center">
                   <div className="h-10 w-10 rounded-full bg-muted mr-3">

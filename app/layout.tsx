@@ -1,10 +1,10 @@
 import type React from "react"
+import { Toaster } from "sonner"
 import ClientLayout from "./clientLayout"
-import './globals.css'
+
 export const metadata = {
   title: "DevConnect - IT Networking Platform",
   description: "Connect with IT professionals, find projects, and attend events",
-  generator: 'v0.dev'
 }
 
 export default function RootLayout({
@@ -12,9 +12,11 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
-  return <ClientLayout>{children}</ClientLayout>
+  return (
+    <ClientLayout>
+      {children}
+      <Toaster position="top-right" />
+    </ClientLayout>
+  )
 }
 
-
-
-import './globals.css'

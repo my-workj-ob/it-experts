@@ -1,25 +1,26 @@
 "use client"
 
-import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
 import {
-  Home,
-  Users,
-  MessageSquare,
+  Briefcase,
   Calendar,
-  User,
-  Settings,
+  CreditCard,
+  Home,
+  LayoutDashboard,
   LogOut,
   Menu,
-  X,
+  MessageSquare,
   PanelLeft,
-  Briefcase,
+  Settings,
+  User,
+  Users,
+  Video,
+  X,
   Zap,
-  CreditCard,
-  LayoutDashboard,
 } from "lucide-react"
+import Link from "next/link"
+import { usePathname } from "next/navigation"
 import { useState } from "react"
 
 const navItems = [
@@ -27,6 +28,7 @@ const navItems = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { name: "Explore", href: "/explore", icon: Users },
   { name: "Projects", href: "/projects", icon: Briefcase },
+  { name: "Videos", href: "/videos", icon: Video },
   { name: "Chat", href: "/chat", icon: MessageSquare },
   { name: "Events", href: "/events", icon: Calendar },
   { name: "Profile", href: "/profile", icon: User },
