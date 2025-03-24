@@ -30,8 +30,6 @@ export async function POST(request: Request) {
 					let accumulatedText = '';
 
 					for await (const chunk of response) {
-						console.log('Received chunk:', chunk);
-
 						if (chunk && chunk.token && typeof chunk.token.text === 'string') {
 							// Accumulate the text
 							accumulatedText += chunk.token.text;

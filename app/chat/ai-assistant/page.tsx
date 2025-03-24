@@ -27,6 +27,11 @@ const suggestedPrompts = [
   "Recommend resources to learn AI and machine learning",
   "Tips for remote collaboration on IT projects",
 ]
+type Message = {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+};
 
 // Custom hook for chat functionality
 function useCustomChat() {
@@ -40,114 +45,111 @@ function useCustomChat() {
   ])
   const [input, setInput] = useState("")
   const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState(null)
-  const abortControllerRef = useRef(null)
+  const [error, setError] = useState<Error | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInput(e.target.value)
   }
 
-  const handleSubmit = async (e: React.EventHandler) => {
-    e.preventDefault()
-    if (!input.trim() || isLoading) return
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
+    e.preventDefault();
+    if (!input.trim() || isLoading) return;
 
-    // Add user message to the chat
-    const userMessage = {
+    // **Yangi user xabari**
+    const userMessage: Message = {
       id: Date.now().toString(),
       role: "user",
       content: input,
-    }
-    setMessages((prev) => [...prev, userMessage])
-    setInput("")
-    setIsLoading(true)
-    setError(null)
+    };
+    setMessages((prev) => [...prev, userMessage]);
+    setInput("");
+    setIsLoading(true);
+    setError(null);
 
-    // Create a new AbortController for this request
-    abortControllerRef.current = new AbortController()
-    const signal = abortControllerRef.current.signal
+    // **AbortController yaratish**
+    abortControllerRef.current = new AbortController();
+    const signal = abortControllerRef.current.signal;
 
     try {
-      // Send the request to the API
+      // **APIga so'rov yuborish**
       const response = await fetch("/api/chat", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          messages: [...messages, userMessage],
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: [...messages, userMessage] }),
         signal,
-      })
+      });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      // Create a new message for the assistant's response
-      const assistantMessage = {
+      // **Assistant xabarini yaratish**
+      const assistantMessage: Message = {
         id: Date.now().toString(),
         role: "assistant",
         content: "",
-      }
-      setMessages((prev) => [...prev, assistantMessage])
+      };
+      setMessages((prev) => [...prev, assistantMessage]);
 
-      // Process the stream
-      const reader = response.body.getReader()
-      const decoder = new TextDecoder()
-      let done = false
+      // **SSE oqimini o‘qish**
+      const reader = response.body?.getReader();
+      if (!reader) throw new Error("Failed to get reader from response body.");
+
+      const decoder = new TextDecoder();
+      let done = false;
 
       while (!done) {
-        const { value, done: doneReading } = await reader.read()
-        done = doneReading
+        const { value, done: doneReading } = await reader.read();
+        done = doneReading;
+        if (done) break;
 
-        if (done) break
-
-        // Process the chunk
-        const chunk = decoder.decode(value, { stream: true })
-        const lines = chunk.split("\n\n")
+        // **Ma’lumotni dekodlash**
+        const chunk = decoder.decode(value, { stream: true });
+        const lines = chunk.split("\n\n");
 
         for (const line of lines) {
           if (line.startsWith("data: ")) {
-            const data = line.substring(6)
+            const data = line.substring(6);
 
-            if (data === "[DONE]") {
-              break
-            }
+            if (data === "[DONE]") break;
 
             try {
-              const parsed = JSON.parse(data)
+              const parsed: { text: string } = JSON.parse(data);
 
-              // Update the last message with the new content
+              // **Oxirgi xabarni yangilash**
               setMessages((prev) => {
-                const newMessages = [...prev]
-                const lastMessage = newMessages[newMessages.length - 1]
+                const newMessages = [...prev];
+                const lastMessage = newMessages[newMessages.length - 1];
                 if (lastMessage.role === "assistant") {
-                  lastMessage.content = parsed.text
+                  lastMessage.content = parsed.text;
                 }
-                return newMessages
-              })
+                return newMessages;
+              });
             } catch (e) {
-              console.error("Error parsing SSE data:", e, "Data:", data)
+              console.error("Error parsing SSE data:", e, "Data:", data);
             }
           }
         }
       }
     } catch (err) {
-      if (err.name !== "AbortError") {
-        console.error("Error in chat:", err)
-        setError(err)
+      if (err instanceof Error && err.name !== "AbortError") {
+        console.error("Error in chat:", err);
+        setError(err);
       }
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
-  const stop = () => {
+  // **So‘rovni to‘xtatish**
+  const stop = (): void => {
     if (abortControllerRef.current) {
-      abortControllerRef.current.abort()
-      setIsLoading(false)
+      abortControllerRef.current.abort();
+      setIsLoading(false);
     }
-  }
+  };
+
 
   const reload = () => {
     // Implement reload functionality if needed
