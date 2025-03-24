@@ -12,6 +12,7 @@ import { Separator } from "@/components/ui/separator"
 import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
 import { ArrowLeft, Globe, ImageIcon, Lock, Tag, Upload, Video } from "lucide-react"
+import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
@@ -179,7 +180,9 @@ export default function UploadVideoPage() {
                   <Label htmlFor="thumbnail">Thumbnail</Label>
                   {thumbnailPreview ? (
                     <div className="relative w-full max-w-[360px] aspect-video rounded-lg overflow-hidden">
-                      <img
+                      <Image
+                        width={100}
+                        height={100}
                         src={thumbnailPreview || "/placeholder.svg"}
                         alt="Thumbnail preview"
                         className="w-full h-full object-cover"
@@ -247,7 +250,7 @@ export default function UploadVideoPage() {
                           <button
                             type="button"
                             className="ml-2 text-muted-foreground hover:text-foreground"
-                            className="ml-2 text-muted-foreground hover:text-foreground"
+
                             onClick={() => handleRemoveTag(tag)}
                           >
                             &times;

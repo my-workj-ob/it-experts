@@ -165,7 +165,9 @@ export default function ShortsPage() {
         <div className="h-full w-full flex items-center justify-center">
           <div className="relative h-full max-h-[calc(100vh-80px)] aspect-[9/16] mx-auto" onClick={handleVideoClick}>
             <video
-              ref={(el) => (videoRefs.current[currentShortIndex] = el)}
+              ref={(el) => {
+                if (el) videoRefs.current[currentShortIndex] = el;
+              }}
               src={currentShort.video}
               poster={currentShort.thumbnail}
               className="h-full w-full object-cover"
@@ -174,7 +176,6 @@ export default function ShortsPage() {
               playsInline
               muted
             />
-
             {/* Video Info Overlay */}
             <div className="absolute inset-0 flex flex-col justify-end p-4 bg-gradient-to-t from-black/70 via-transparent to-transparent">
               <h2 className="text-lg font-bold">{currentShort.title}</h2>
@@ -233,12 +234,12 @@ export default function ShortsPage() {
             </div>
 
             {/* Navigation Buttons (hidden but functional for swipe-like behavior) */}
-            <button
+            <input
               className="absolute top-0 left-0 h-full w-1/2 opacity-0"
               onClick={handlePrevShort}
               disabled={currentShortIndex === 0}
             />
-            <button
+            <input
               className="absolute top-0 right-0 h-full w-1/2 opacity-0"
               onClick={handleNextShort}
               disabled={currentShortIndex === mockShorts.length - 1}

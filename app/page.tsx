@@ -236,8 +236,8 @@ export default function LandingPage() {
                   <Star className="h-5 w-5 text-yellow-500" />
                 </div>
                 <p className="text-muted-foreground mb-4">
-                  "DevConnect helped me find the perfect team members for my startup. The AI matching is incredibly
-                  accurate!"
+                  &quot;DevConnect helped me find the perfect team members for my startup. The AI matching is incredibly
+                  accurate!&quot;
                 </p>
                 <div className="flex items-center">
                   <div className="h-10 w-10 rounded-full bg-muted mr-3">
@@ -259,8 +259,8 @@ export default function LandingPage() {
                   <Star className="h-5 w-5 text-yellow-500" />
                 </div>
                 <p className="text-muted-foreground mb-4">
-                  "I've attended several events through DevConnect and made valuable connections that led to job
-                  opportunities."
+                  &quot;I&apos;ve attended several events through DevConnect and made valuable connections that led to job
+                  opportunities.&quot;
                 </p>
                 <div className="flex items-center">
                   <div className="h-10 w-10 rounded-full bg-muted mr-3">
@@ -282,8 +282,8 @@ export default function LandingPage() {
                   <Star className="h-5 w-5 text-yellow-500" />
                 </div>
                 <p className="text-muted-foreground mb-4">
-                  "The AI assistant helped me optimize my profile and I've received more connection requests than ever
-                  before!"
+                  &quot;The AI assistant helped me optimize my profile and I&aposl;ve received more connection requests than ever
+                  before!&quot;
                 </p>
                 <div className="flex items-center">
                   <div className="h-10 w-10 rounded-full bg-muted mr-3">

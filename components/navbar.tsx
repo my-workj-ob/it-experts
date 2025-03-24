@@ -15,12 +15,10 @@ import {
 import { Input } from "@/components/ui/input"
 import { Bell, Search, Video, Zap } from "lucide-react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
 import { useState } from "react"
 
 export default function Navbar() {
   const [isLoggedIn, setIsLoggedIn] = useState(true) // Set to true for demo
-  const pathname = usePathname()
 
   return (
     <header className="sticky top-0 z-30 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">

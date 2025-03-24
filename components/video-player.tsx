@@ -26,6 +26,8 @@ export default function VideoPlayer({ src, poster, autoPlay = false }: VideoPlay
   const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
+    console.log(isFullscreen);
+
     const video = videoRef.current
     if (!video) return
 
