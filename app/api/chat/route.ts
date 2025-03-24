@@ -1,10 +1,8 @@
 import { HfInference } from '@huggingface/inference';
-import { NextResponse } from 'next/server';
 
 // Initialize Hugging Face Inference with token
 const HF_TOKEN = process.env.HF_TOKEN || 'hf_dummy_token_for_demo';
 const hf = new HfInference(HF_TOKEN);
-
 export async function POST(request: Request) {
 	try {
 		const { messages } = await request.json();
@@ -53,19 +51,30 @@ export async function POST(request: Request) {
 			},
 		});
 
-		// Return the streaming response with proper headers
+		// ✅ CORS headers ni qo'shish
 		return new Response(stream, {
 			headers: {
 				'Content-Type': 'text/event-stream',
 				'Cache-Control': 'no-cache',
 				Connection: 'keep-alive',
+				'Access-Control-Allow-Origin': '*', // ✅ CORS
+				'Access-Control-Allow-Methods': 'GET, POST, OPTIONS', // ✅ CORS
+				'Access-Control-Allow-Headers': 'Content-Type', // ✅ CORS
 			},
 		});
 	} catch (error) {
 		console.error('Error in chat API:', error);
-		return NextResponse.json(
-			{ error: 'There was an error processing your request' },
-			{ status: 500 }
+		return new Response(
+			JSON.stringify({ error: 'There was an error processing your request' }),
+			{
+				status: 500,
+				headers: {
+					'Content-Type': 'application/json',
+					'Access-Control-Allow-Origin': '*', // ✅ CORS
+					'Access-Control-Allow-Methods': 'GET, POST, OPTIONS', // ✅ CORS
+					'Access-Control-Allow-Headers': 'Content-Type', // ✅ CORS
+				},
+			}
 		);
 	}
 }
