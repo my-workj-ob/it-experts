@@ -72,7 +72,12 @@ export async function POST(request: Request) {
 	}
 }
 
-function formatMessages(messages) {
+type Message = {
+	role: 'user' | 'assistant';
+	content: string;
+};
+
+function formatMessages(messages: Message[]): string {
 	// Add system prompt
 	const systemPrompt =
 		'You are a helpful AI assistant for DevConnect, an IT networking platform. You can help users with networking advice, project ideas, technical questions, and career guidance. Be professional, friendly, and provide specific, actionable advice tailored to IT professionals.';
