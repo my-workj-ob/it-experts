@@ -16,7 +16,7 @@ export async function POST(request: Request) {
 						model: 'mistralai/Mistral-7B-Instruct-v0.2',
 						inputs: formattedMessages,
 						parameters: {
-							max_new_tokens: 512,
+							max_new_tokens: 10000,
 							temperature: 0.7,
 							repetition_penalty: 1.2,
 						},
