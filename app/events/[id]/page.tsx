@@ -26,7 +26,7 @@ import {
   Video,
 } from "lucide-react"
 import Link from "next/link"
-import { useParams, useRouter } from "next/navigation"
+import { useRouter } from "next/navigation"
 import { useState } from "react"
 
 // Mock event data
@@ -135,7 +135,6 @@ const mockEvent = {
 }
 
 export default function EventDetailPage() {
-  const params = useParams()
   const router = useRouter()
   const [comment, setComment] = useState("")
   const [isRegistering, setIsRegistering] = useState(false)
