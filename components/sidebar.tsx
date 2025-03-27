@@ -1,182 +1,314 @@
 "use client"
 
-import { Button } from "@/components/ui/button"
-import { cn } from "@/lib/utils"
-import {
-  Briefcase,
-  Calendar,
-  CreditCard,
-  Home,
-  LayoutDashboard,
-  LogOut,
-  Menu,
-  MessageSquare,
-  PanelLeft,
-  Settings,
-  User,
-  Users,
-  Video,
-  X,
-  Zap,
-} from "lucide-react"
+import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { useState } from "react"
-
-const navItems = [
-  { name: "Home", href: "/", icon: Home },
-  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { name: "Explore", href: "/explore", icon: Users },
-  { name: "Projects", href: "/projects", icon: Briefcase },
-  { name: "Videos", href: "/videos", icon: Video },
-  { name: "Chat", href: "/chat", icon: MessageSquare },
-  { name: "Events", href: "/events", icon: Calendar },
-  { name: "Profile", href: "/profile", icon: User },
-]
+import {
+  Home,
+  Users,
+  MessageSquare,
+  Calendar,
+  FolderKanban,
+  Video,
+  Settings,
+  BookOpen,
+  Briefcase,
+  Award,
+  LinkIcon,
+  Code,
+  Trophy,
+  FileCode,
+  Sparkles,
+  ChevronDown,
+  ChevronRight,
+  BarChart2,
+  MessageCircle,
+  Gem,
+  Search,
+  Layers,
+} from "lucide-react"
+import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { useMobile } from "@/hooks/use-mobile"
 
 export default function Sidebar() {
   const pathname = usePathname()
-  const [isOpen, setIsOpen] = useState(false)
-  const [isCollapsed, setIsCollapsed] = useState(false)
+  const isMobile = useMobile()
+  const [expandedSections, setExpandedSections] = useState({
+    main: true,
+    premium: false,
+  })
 
-  const toggleSidebar = () => {
-    setIsOpen(!isOpen)
+  // Don't render sidebar on landing page
+  if (pathname === "/" || pathname === "/login" || pathname === "/register") {
+    return null
   }
 
-  const toggleCollapse = () => {
-    setIsCollapsed(!isCollapsed)
+  const mainRoutes = [
+    {
+      label: "Home",
+      icon: Home,
+      href: "/home",
+      active: pathname === "/home",
+      premium: false,
+    },
+    {
+      label: "Explore",
+      icon: Users,
+      href: "/explore",
+      active: pathname === "/explore",
+      premium: false,
+    },
+    {
+      label: "Chat",
+      icon: MessageSquare,
+      href: "/chat",
+      active: pathname?.includes("/chat"),
+      premium: false,
+    },
+    {
+      label: "Events",
+      icon: Calendar,
+      href: "/events",
+      active: pathname?.includes("/events"),
+      premium: false,
+    },
+    {
+      label: "Find a Team",
+      icon: Search,
+      href: "/find-team",
+      active: pathname === "/find-team",
+      premium: false,
+    },
+    {
+      label: "Project Showcase",
+      icon: Layers,
+      href: "/project-showcase",
+      active: pathname?.includes("/project-showcase"),
+      premium: false,
+    },
+    {
+      label: "Videos",
+      icon: Video,
+      href: "/videos",
+      active: pathname?.includes("/videos"),
+      premium: false,
+    },
+    {
+      label: "Statistics",
+      icon: BarChart2,
+      href: "/statistics",
+      active: pathname === "/statistics",
+      premium: false,
+    },
+    {
+      label: "Feedback",
+      icon: MessageCircle,
+      href: "/feedback",
+      active: pathname === "/feedback",
+      premium: false,
+    },
+    {
+      label: "Settings",
+      icon: Settings,
+      href: "/settings",
+      active: pathname === "/settings",
+      premium: false,
+    },
+  ]
+
+  const premiumRoutes = [
+    {
+      label: "Learn",
+      icon: BookOpen,
+      href: "/learn",
+      active: pathname?.includes("/learn"),
+      premium: true,
+    },
+    {
+      label: "Portfolio",
+      icon: Briefcase,
+      href: "/portfolio",
+      active: pathname?.includes("/portfolio"),
+      premium: true,
+    },
+    {
+      label: "Mentorship",
+      icon: Users,
+      href: "/mentorship",
+      active: pathname?.includes("/mentorship"),
+      premium: true,
+    },
+    {
+      label: "Skills",
+      icon: Award,
+      href: "/skills-verification",
+      active: pathname?.includes("/skills-verification"),
+      premium: true,
+    },
+    {
+      label: "Jobs",
+      icon: Briefcase,
+      href: "/jobs",
+      active: pathname?.includes("/jobs"),
+      premium: true,
+    },
+    {
+      label: "Integrations",
+      icon: LinkIcon,
+      href: "/integrations",
+      active: pathname?.includes("/integrations"),
+      premium: true,
+    },
+    {
+      href: "/forum",
+      label: "Forum",
+      icon: MessageSquare,
+      active: pathname?.includes("/forum"),
+      premium: true,
+    },
+    {
+      href: "/recommendations",
+      label: "AI Recommendations",
+      icon: Sparkles,
+      active: pathname?.includes("/recommendations"),
+      premium: true,
+    },
+    {
+      href: "/code-review",
+      label: "Code Review",
+      icon: FileCode,
+      active: pathname?.includes("/code-review"),
+      premium: true,
+    },
+    {
+      href: "/chat-video",
+      label: "Chat & Video",
+      icon: Video,
+      active: pathname?.includes("/chat-video"),
+      premium: true,
+    },
+    {
+      href: "/tasks",
+      label: "Tasks",
+      icon: FolderKanban,
+      active: pathname?.includes("/tasks"),
+      premium: true,
+    },
+    {
+      href: "/live-coding",
+      label: "Live Coding",
+      icon: Code,
+      active: pathname?.includes("/live-coding"),
+      premium: true,
+    },
+    {
+      href: "/hackathons",
+      label: "Hackathons",
+      icon: Trophy,
+      active: pathname?.includes("/hackathons"),
+      premium: true,
+    },
+  ]
+
+  const toggleSection = (section: string) => {
+    setExpandedSections((prev) => ({
+      ...prev,
+      [section]: !prev[section],
+    }))
+  }
+
+  if (isMobile) {
+    return (
+      <div className="fixed bottom-0 left-0 z-50 w-full h-16 bg-background border-t flex items-center justify-around px-3">
+        {mainRoutes.slice(0, 5).map((route) => (
+          <Link key={route.href} href={route.href}>
+            <Button
+              variant="ghost"
+              className={cn(
+                "flex flex-col h-14 w-14 items-center justify-center rounded-lg gap-1 p-0",
+                route.active && "bg-muted",
+              )}
+            >
+              <route.icon className={cn("h-5 w-5", route.active && "text-primary")} />
+              <span className="text-xs">{route.label}</span>
+            </Button>
+          </Link>
+        ))}
+      </div>
+    )
   }
 
   return (
-    <>
-      {/* Mobile menu button */}
-      <Button variant="ghost" size="icon" className="fixed top-4 left-4 z-50 md:hidden" onClick={toggleSidebar}>
-        {isOpen ? <X /> : <Menu />}
-      </Button>
-
-      {/* Sidebar for mobile */}
-      <div
-        className={cn(
-          "fixed inset-0 z-40 bg-background/80 backdrop-blur-sm md:hidden transition-opacity duration-200",
-          isOpen ? "opacity-100" : "opacity-0 pointer-events-none",
-        )}
-        onClick={toggleSidebar}
-      />
-
-      <aside
-        className={cn(
-          "fixed top-0 left-0 z-40 h-full bg-background border-r transition-all duration-300 md:relative md:translate-x-0",
-          isOpen ? "translate-x-0" : "-translate-x-full",
-          isCollapsed ? "w-[70px]" : "w-64",
-        )}
-      >
-        <div className="flex flex-col h-full">
-          <div className="p-4 border-b flex items-center justify-between">
-            {!isCollapsed && (
-              <Link
-                href="/"
-                className="font-bold text-xl text-transparent bg-clip-text bg-gradient-to-r from-primary to-indigo-600"
-              >
-                DevConnect
-              </Link>
+    <div className="hidden md:flex flex-col w-64 border-r bg-[#0a0d14] h-[calc(100vh-4rem)] sticky top-16">
+      <ScrollArea className="flex-1 pt-3">
+        <nav className="grid gap-2 px-2">
+          {/* Main Section Header */}
+          <div
+            className="flex items-center justify-between px-3 py-2 cursor-pointer hover:bg-gray-800/50 rounded-md"
+            onClick={() => toggleSection("main")}
+          >
+            <span className="font-semibold text-sm text-gray-200">MAIN NAVIGATION</span>
+            {expandedSections.main ? (
+              <ChevronDown className="h-4 w-4 text-gray-400" />
+            ) : (
+              <ChevronRight className="h-4 w-4 text-gray-400" />
             )}
-            <Button variant="ghost" size="icon" className="hidden md:flex" onClick={toggleCollapse}>
-              <PanelLeft className={cn("h-5 w-5", isCollapsed && "rotate-180")} />
-            </Button>
           </div>
 
-          <nav className="flex-1 py-4 px-2 space-y-1">
-            {navItems.map((item) => (
-              <Link
-                key={item.name}
-                href={item.href}
-                className={cn(
-                  "flex items-center px-2 py-2 rounded-md text-sm font-medium transition-colors",
-                  pathname === item.href
-                    ? "bg-gradient-to-r from-primary to-indigo-600 text-primary-foreground"
-                    : "text-foreground hover:bg-muted",
-                  isCollapsed && "justify-center",
-                )}
-              >
-                <item.icon className={cn("h-5 w-5", !isCollapsed && "mr-3")} />
-                {!isCollapsed && <span>{item.name}</span>}
-              </Link>
-            ))}
-
-            <Link
-              href="/pricing"
-              className={cn(
-                "flex items-center px-2 py-2 rounded-md text-sm font-medium transition-colors",
-                pathname === "/pricing"
-                  ? "bg-gradient-to-r from-primary to-indigo-600 text-primary-foreground"
-                  : "text-foreground hover:bg-muted",
-                isCollapsed && "justify-center",
-              )}
-            >
-              <div
-                className={cn(
-                  "flex items-center justify-center h-5 w-5 rounded-full",
-                  pathname !== "/pricing" && "bg-gradient-to-r from-primary/20 to-indigo-600/20",
-                  !isCollapsed && "mr-3",
-                )}
-              >
-                <Zap className={cn("h-4 w-4", pathname === "/pricing" ? "text-primary-foreground" : "text-primary")} />
-              </div>
-              {!isCollapsed && <span>Upgrade</span>}
-            </Link>
-
-            <Link
-              href="/subscription"
-              className={cn(
-                "flex items-center px-2 py-2 rounded-md text-sm font-medium transition-colors",
-                pathname === "/subscription"
-                  ? "bg-gradient-to-r from-primary to-indigo-600 text-primary-foreground"
-                  : "text-foreground hover:bg-muted",
-                isCollapsed && "justify-center",
-              )}
-            >
-              <div
-                className={cn(
-                  "flex items-center justify-center h-5 w-5 rounded-full",
-                  pathname !== "/subscription" && "bg-gradient-to-r from-primary/20 to-indigo-600/20",
-                  !isCollapsed && "mr-3",
-                )}
-              >
-                <CreditCard
-                  className={cn("h-4 w-4", pathname === "/subscription" ? "text-primary-foreground" : "text-primary")}
-                />
-              </div>
-              {!isCollapsed && <span>Subscription</span>}
-            </Link>
-          </nav>
-
-          <div className="p-4 border-t">
-            <div className="space-y-1">
-              <Link
-                href="/settings"
-                className={cn(
-                  "flex items-center px-2 py-2 rounded-md text-sm font-medium transition-colors hover:bg-muted",
-                  isCollapsed && "justify-center",
-                )}
-              >
-                <Settings className={cn("h-5 w-5", !isCollapsed && "mr-3")} />
-                {!isCollapsed && <span>Settings</span>}
-              </Link>
-              <Button
-                variant="ghost"
-                className={cn(
-                  "w-full justify-start px-2 py-2 text-sm font-medium text-red-500 hover:bg-red-50 hover:text-red-600",
-                  isCollapsed && "justify-center",
-                )}
-              >
-                <LogOut className={cn("h-5 w-5", !isCollapsed && "mr-3")} />
-                {!isCollapsed && <span>Logout</span>}
-              </Button>
+          {/* Main Routes */}
+          {expandedSections.main && (
+            <div className="grid gap-1 ml-1">
+              {mainRoutes.map((route) => (
+                <Link key={route.href} href={route.href} passHref>
+                  <Button
+                    variant="ghost"
+                    className={cn(
+                      "w-full justify-start gap-4 px-3 hover:bg-gray-800/70 text-gray-300",
+                      route.active && "bg-gray-800/90 text-white",
+                    )}
+                  >
+                    <route.icon className={cn("h-5 w-5", route.active ? "text-white" : "text-gray-400")} />
+                    <span>{route.label}</span>
+                  </Button>
+                </Link>
+              ))}
             </div>
+          )}
+
+          {/* Premium Section Header - Smaller as requested */}
+          <div
+            className="flex items-center justify-between px-3 py-2 mt-3 cursor-pointer hover:bg-gray-800/50 rounded-md"
+            onClick={() => toggleSection("premium")}
+          >
+            <span className="font-medium text-sm text-purple-400">PREMIUM FEATURES</span>
+            {expandedSections.premium ? (
+              <ChevronDown className="h-4 w-4 text-purple-400" />
+            ) : (
+              <ChevronRight className="h-4 w-4 text-purple-400" />
+            )}
           </div>
-        </div>
-      </aside>
-    </>
+
+          {/* Premium Routes - Smaller with icon instead of PRO text */}
+          {expandedSections.premium && (
+            <div className="grid gap-1 ml-1 mt-1">
+              {premiumRoutes.map((route) => (
+                <Link key={route.href} href={route.href} passHref>
+                  <div className="flex items-center justify-between px-3 py-1.5 hover:bg-gray-800/50 rounded-md group">
+                    <div className="flex items-center gap-3">
+                      <route.icon className="h-4 w-4 text-purple-400" />
+                      <span className="font-medium text-purple-400 text-sm">{route.label}</span>
+                    </div>
+                    <Gem className="h-4 w-4 text-purple-300" />
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </nav>
+      </ScrollArea>
+    </div>
   )
 }
 

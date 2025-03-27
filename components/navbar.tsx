@@ -1,9 +1,11 @@
 "use client"
 
-import { ModeToggle } from "@/components/mode-toggle"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
+import Link from "next/link"
+import { useState } from "react"
+import { Bell, Search, Zap, Video } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,13 +14,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Input } from "@/components/ui/input"
-import { Bell, Search, Video, Zap } from "lucide-react"
-import Link from "next/link"
-import { useState } from "react"
+import { ModeToggle } from "@/components/mode-toggle"
+import { Badge } from "@/components/ui/badge"
+import { usePathname } from "next/navigation"
 
 export default function Navbar() {
   const [isLoggedIn, setIsLoggedIn] = useState(true) // Set to true for demo
+  const pathname = usePathname()
 
   return (
     <header className="sticky top-0 z-30 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -88,7 +90,25 @@ export default function Navbar() {
                     <Link href="/dashboard">Dashboard</Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
+                    <Link href="/portfolio">Portfolio</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/mentorship">Mentorship</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/skills-verification">Skills Verification</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/jobs">Jobs</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/integrations">Integrations</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
                     <Link href="/settings">Settings</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/learn">Learn</Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link href="/subscription">

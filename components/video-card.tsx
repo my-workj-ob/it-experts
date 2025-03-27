@@ -1,6 +1,6 @@
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Clock, Eye, ThumbsUp } from "lucide-react"
 import Link from "next/link"
+import { Clock, ThumbsUp, Eye } from "lucide-react"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 interface Video {
   id: number

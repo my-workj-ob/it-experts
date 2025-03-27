@@ -1,10 +1,10 @@
 "use client"
 
-import { Button } from "@/components/ui/button"
+import { useState, useRef, useEffect } from "react"
+import { Play, Pause, Volume2, VolumeX, Maximize, SkipBack, SkipForward, Settings } from "lucide-react"
 import { Slider } from "@/components/ui/slider"
+import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
-import { Maximize, Pause, Play, Settings, SkipBack, SkipForward, Volume2, VolumeX } from "lucide-react"
-import { useEffect, useRef, useState } from "react"
 
 interface VideoPlayerProps {
   src: string
@@ -26,8 +26,6 @@ export default function VideoPlayer({ src, poster, autoPlay = false }: VideoPlay
   const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
-    console.log(isFullscreen);
-
     const video = videoRef.current
     if (!video) return
 

@@ -1,6 +1,7 @@
 "use client"
 
 import type React from "react"
+
 import { useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
@@ -9,7 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Github, Linkedin, ArrowLeft } from "lucide-react"
+import { Github, Mail } from "lucide-react"
 import { ModeToggle } from "@/components/mode-toggle"
 
 export default function LoginPage() {
@@ -32,8 +33,7 @@ export default function LoginPage() {
       {/* Simple header with logo and theme toggle */}
       <header className="w-full py-4 px-6 flex justify-between items-center">
         <Link href="/" className="flex items-center">
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          <span className="font-bold text-xl text-transparent bg-clip-text bg-gradient-to-r from-primary to-indigo-600">
+          <span className="font-bold text-xl text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-600">
             DevConnect
           </span>
         </Link>
@@ -43,10 +43,12 @@ export default function LoginPage() {
       <div className="flex-1 flex items-center justify-center p-4">
         <Card className="w-full max-w-md">
           <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl font-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-primary to-indigo-600">
-              Login
+            <CardTitle className="text-2xl font-bold text-center">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-600">
+                Welcome back
+              </span>
             </CardTitle>
-            <CardDescription className="text-center">Enter your credentials to access your account</CardDescription>
+            <CardDescription className="text-center">Login to your account to continue</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -74,7 +76,7 @@ export default function LoginPage() {
               </div>
               <Button
                 type="submit"
-                className="w-full bg-gradient-to-r from-primary to-indigo-600 hover:from-primary/90 hover:to-indigo-600/90"
+                className="w-full bg-gradient-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-600/90"
                 disabled={isLoading}
               >
                 {isLoading ? "Logging in..." : "Login"}
@@ -96,8 +98,8 @@ export default function LoginPage() {
                 Github
               </Button>
               <Button variant="outline" className="w-full">
-                <Linkedin className="mr-2 h-4 w-4" />
-                LinkedIn
+                <Mail className="mr-2 h-4 w-4" />
+                Google
               </Button>
             </div>
           </CardContent>
