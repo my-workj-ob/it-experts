@@ -1,36 +1,36 @@
 "use client"
 
-import { useState } from "react"
-import Link from "next/link"
-import { usePathname } from "next/navigation"
-import {
-  Home,
-  Users,
-  MessageSquare,
-  Calendar,
-  FolderKanban,
-  Video,
-  Settings,
-  BookOpen,
-  Briefcase,
-  Award,
-  LinkIcon,
-  Code,
-  Trophy,
-  FileCode,
-  Sparkles,
-  ChevronDown,
-  ChevronRight,
-  BarChart2,
-  MessageCircle,
-  Gem,
-  Search,
-  Layers,
-} from "lucide-react"
-import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { useMobile } from "@/hooks/use-mobile"
+import { cn } from "@/lib/utils"
+import {
+  Award,
+  BarChart2,
+  BookOpen,
+  Briefcase,
+  Calendar,
+  ChevronDown,
+  ChevronRight,
+  Code,
+  FileCode,
+  FolderKanban,
+  Gem,
+  Home,
+  Layers,
+  LinkIcon,
+  MessageCircle,
+  MessageSquare,
+  Search,
+  Settings,
+  Sparkles,
+  Trophy,
+  Users,
+  Video,
+} from "lucide-react"
+import Link from "next/link"
+import { usePathname } from "next/navigation"
+import { useState } from "react"
 
 export default function Sidebar() {
   const pathname = usePathname()

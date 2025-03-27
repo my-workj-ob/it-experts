@@ -1,1 +1,0 @@
-(self.webpackChunk_N_E=self.webpackChunk_N_E||[]).push([[8285],{18106:(e,s,r)=>{Promise.resolve().then(r.bind(r,15451))},15451:(e,s,r)=>{"use strict";r.r(s),r.d(s,{default:()=>a});var h=r(95155);let a=()=>(0,h.jsx)("div",{children:(0,h.jsx)("h1",{children:"Instructor Dashboard"})})}},e=>{var s=s=>e(e.s=s);e.O(0,[8441,1517,7358],()=>s(18106)),_N_E=e.O()}]);
