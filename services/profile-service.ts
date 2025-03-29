@@ -106,14 +106,10 @@ export const ProfileService = {
 		const formData = new FormData();
 		formData.append('file', file);
 
-		const response = await axiosInstance.post(
-			'http://localhost:3030/file/upload',
-			formData,
-			{
-				headers: { 'Content-Type': 'multipart/form-data' },
-				withCredentials: true,
-			}
-		);
+		const response = await axiosInstance.post('/file/upload', formData, {
+			headers: { 'Content-Type': 'multipart/form-data' },
+			withCredentials: true,
+		});
 
 		return response.data; // { fileId: 123, fileUrl: "uploads/image.png" }
 	},

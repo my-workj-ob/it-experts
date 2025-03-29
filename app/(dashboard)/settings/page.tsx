@@ -18,6 +18,7 @@ import { useToast } from "@/hooks/use-toast"
 import { ProfileService } from "@/services/profile-service"
 
 import useProfile from "@/hooks/profile/use-profile"
+import axiosInstance from "@/lib/create-axios"
 import { ProfileData } from "@/types/profile-types"
 import { get } from "lodash"
 import {
@@ -70,7 +71,9 @@ export default function SettingsPage() {
   const [language, setLanguage] = useState("english")
   const [theme, setTheme] = useState("system")
   const [matchingPreference, setMatchingPreference] = useState(75)
-
+  const [category, setCategory] = useState<{ name: string }>({
+    name: ""
+  })
   // Fetch profile data on component mount
   useEffect(() => {
     const fetchProfileData = async () => {
@@ -245,8 +248,19 @@ export default function SettingsPage() {
     fileInputRef.current?.click()
   }
 
+  const handleCategory = async () => {
+    const res = await axiosInstance.post("/categories", {
+      ...category
+    })
+
+    console.log(res.data);
+
+  }
+
   return (
     <div className="container mx-auto py-6 space-y-8">
+      <Input onChange={(e) => setCategory({ ...category, name: e.target.value })} />
+      <Button onClick={() => handleCategory()}>add</Button>
       <div className="flex flex-col md:flex-row justify-between gap-4">
         <h1 className="text-3xl font-bold">Settings</h1>
       </div>
