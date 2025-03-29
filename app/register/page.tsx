@@ -1,38 +1,123 @@
 "use client"
 
-import type React from "react"
-
-import { useState } from "react"
+import { Github, Loader2, Mail } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import type React from "react"
+import { useRef, useState, type FormEvent } from "react"
+
+import { ModeToggle } from "@/components/mode-toggle"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Github, Mail } from "lucide-react"
-import { ModeToggle } from "@/components/mode-toggle"
+import { useToast } from "@/hooks/use-toast"
+import AuthService from "@/services/auth-service"
+import { IRegister } from "@/types/auth-types"
 
 export default function RegisterPage() {
   const router = useRouter()
+  const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
   const [step, setStep] = useState(1)
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  // Form data refs
+  const formData = useRef({
+    firstName: "",
+    lastName: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+    jobTitle: "",
+    company: "",
+    expertise: "",
+    experience: "",
+  })
+
+  // Form validation
+  const [errors, setErrors] = useState<{ [key: string]: string }>({})
+
+  const validateStep1 = () => {
+    const newErrors: { [key: string]: string } = {}
+
+    if (!formData.current.firstName) newErrors.firstName = "First name is required"
+    if (!formData.current.lastName) newErrors.lastName = "Last name is required"
+    if (!formData.current.email) newErrors.email = "Email is required"
+    if (!/^\S+@\S+\.\S+$/.test(formData.current.email)) newErrors.email = "Invalid email format"
+    if (!formData.current.password) newErrors.password = "Password is required"
+    if (formData.current.password.length < 6) newErrors.password = "Password must be at least 6 characters"
+    if (formData.current.password !== formData.current.confirmPassword) {
+      newErrors.confirmPassword = "Passwords do not match"
+    }
+
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    formData.current = {
+      ...formData.current,
+      [e.target.id]: e.target.value,
+    }
+  }
+
+  const handleSelectChange = (name: string, value: string) => {
+    formData.current = {
+      ...formData.current,
+      [name]: value,
+    }
+  }
+
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
 
     if (step === 1) {
-      setStep(2)
+      if (validateStep1()) {
+        setStep(2)
+      }
       return
     }
 
     setIsLoading(true)
 
-    // Simulate registration
-    setTimeout(() => {
-      setIsLoading(false)
+    try {
+      // Extract registration data
+      const { firstName, lastName, email, password, confirmPassword, jobTitle } = formData.current
+
+      // Register the user
+      const registerData: IRegister = {
+        firstName,
+        lastName,
+        email,
+        password,
+        confirmPassword,
+        jobTitle
+      }
+
+      const response = await AuthService.register(registerData)
+      console.log(response)
+      // If registration is successful, store additional profile data
+      // This would typically be a separate API call to update the user profile
+      // For now, we'll just simulate it with a toast message
+
+      toast({
+        title: "Account created successfully!",
+        description: "Welcome to DevConnect!",
+      })
+
+      // Redirect to dashboard
       router.push("/dashboard")
-    }, 1500)
+    } catch (error: any) {
+      console.error("Registration error:", error)
+      toast({
+        title: "Registration failed",
+        description: error.response?.data?.message || "Something went wrong. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -66,39 +151,84 @@ export default function RegisterPage() {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="firstName">First name</Label>
-                      <Input id="firstName" required />
+                      <Input
+                        id="firstName"
+                        onChange={handleInputChange}
+                        defaultValue={formData.current.firstName}
+                        required
+                      />
+                      {errors.firstName && <p className="text-sm text-red-500">{errors.firstName}</p>}
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="lastName">Last name</Label>
-                      <Input id="lastName" required />
+                      <Input
+                        id="lastName"
+                        onChange={handleInputChange}
+                        defaultValue={formData.current.lastName}
+                        required
+                      />
+                      {errors.lastName && <p className="text-sm text-red-500">{errors.lastName}</p>}
                     </div>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="email">Email</Label>
-                    <Input id="email" type="email" placeholder="name@example.com" required />
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="name@example.com"
+                      onChange={handleInputChange}
+                      defaultValue={formData.current.email}
+                      required
+                    />
+                    {errors.email && <p className="text-sm text-red-500">{errors.email}</p>}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="password">Password</Label>
-                    <Input id="password" type="password" required />
+                    <Input
+                      id="password"
+                      type="password"
+                      onChange={handleInputChange}
+                      defaultValue={formData.current.password}
+                      required
+                    />
+                    {errors.password && <p className="text-sm text-red-500">{errors.password}</p>}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="confirmPassword">Confirm Password</Label>
-                    <Input id="confirmPassword" type="password" required />
+                    <Input
+                      id="confirmPassword"
+                      type="password"
+                      onChange={handleInputChange}
+                      defaultValue={formData.current.confirmPassword}
+                      required
+                    />
+                    {errors.confirmPassword && <p className="text-sm text-red-500">{errors.confirmPassword}</p>}
                   </div>
                 </>
               ) : (
                 <>
                   <div className="space-y-2">
                     <Label htmlFor="jobTitle">Job Title</Label>
-                    <Input id="jobTitle" placeholder="Software Engineer" required />
+                    <Input
+                      id="jobTitle"
+                      placeholder="Software Engineer"
+                      onChange={handleInputChange}
+                      defaultValue={formData.current.jobTitle}
+                      required
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="company">Company</Label>
-                    <Input id="company" placeholder="Company name" />
+                    <Input
+                      id="company"
+                      placeholder="Company name"
+                      onChange={handleInputChange}
+                      defaultValue={formData.current.company}
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="expertise">Area of Expertise</Label>
-                    <Select>
+                    <Select onValueChange={(value) => handleSelectChange("expertise", value)}>
                       <SelectTrigger>
                         <SelectValue placeholder="Select your area of expertise" />
                       </SelectTrigger>
@@ -115,7 +245,7 @@ export default function RegisterPage() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="experience">Years of Experience</Label>
-                    <Select>
+                    <Select onValueChange={(value) => handleSelectChange("experience", value)}>
                       <SelectTrigger>
                         <SelectValue placeholder="Select your experience level" />
                       </SelectTrigger>
@@ -136,7 +266,16 @@ export default function RegisterPage() {
                 className="w-full bg-gradient-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-600/90"
                 disabled={isLoading}
               >
-                {step === 1 ? "Continue" : isLoading ? "Creating account..." : "Create account"}
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    {step === 1 ? "Processing..." : "Creating account..."}
+                  </>
+                ) : step === 1 ? (
+                  "Continue"
+                ) : (
+                  "Create account"
+                )}
               </Button>
             </form>
 
@@ -166,7 +305,7 @@ export default function RegisterPage() {
           </CardContent>
           <CardFooter className="flex justify-between">
             {step === 2 ? (
-              <Button variant="ghost" onClick={() => setStep(1)}>
+              <Button variant="ghost" onClick={() => setStep(1)} disabled={isLoading}>
                 Back
               </Button>
             ) : (

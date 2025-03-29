@@ -1,44 +1,249 @@
 "use client"
 
-import { useState } from "react"
+import type React from "react"
+
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Separator } from "@/components/ui/separator"
+import { Slider } from "@/components/ui/slider"
 import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Separator } from "@/components/ui/separator"
-import { Badge } from "@/components/ui/badge"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Slider } from "@/components/ui/slider"
+import { useToast } from "@/hooks/use-toast"
+
+import { ProfileService } from "@/services/profile-service"
+
+import useProfile from "@/hooks/profile/use-profile"
+import { ProfileData } from "@/types/profile-types"
+import { get } from "lodash"
 import {
-  User,
   Bell,
-  Shield,
-  Globe,
-  Smartphone,
-  Key,
-  LogOut,
-  Trash2,
-  Upload,
-  Plus,
-  Github,
-  Linkedin,
-  Twitter,
   Eye,
   EyeOff,
+  Github,
+  Globe,
+  Key,
+  Linkedin,
+  Loader2,
+  LogOut,
+  Plus,
+  Shield,
+  Smartphone,
+  Trash2,
+  Twitter,
+  Upload,
+  User,
 } from "lucide-react"
+import { useEffect, useRef, useState } from "react"
 
 export default function SettingsPage() {
+  const { getUserProfile, updateNotificationSettings, updatePassword, updatePrivacySettings, updateProfile, updateAvatar, uploadFile } = ProfileService
+  const { toast } = useToast()
+  const { userProfileData, refetch } = useProfile()
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Form states
+  const [isLoading, setIsLoading] = useState(false)
+  const [profileData, setProfileData] = useState<ProfileData>({
+    firstName: "",
+    lastName: "",
+    email: "",
+    jobTitle: "",
+  })
+  const [avatarUrl, setAvatarUrl] = useState<string>("/placeholder.svg?height=96&width=96")
   const [showPassword, setShowPassword] = useState(false)
-  const [passwordValue, setPasswordValue] = useState("********")
+  const [currentPassword, setCurrentPassword] = useState("")
+  const [newPassword, setNewPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
+
+  // Settings states
   const [emailNotifications, setEmailNotifications] = useState(true)
   const [pushNotifications, setPushNotifications] = useState(true)
   const [profileVisibility, setProfileVisibility] = useState("public")
+  const [showEmail, setShowEmail] = useState(false)
+  const [showPhone, setShowPhone] = useState(false)
+  const [showOnlineStatus, setShowOnlineStatus] = useState(true)
   const [language, setLanguage] = useState("english")
   const [theme, setTheme] = useState("system")
   const [matchingPreference, setMatchingPreference] = useState(75)
+
+  // Fetch profile data on component mount
+  useEffect(() => {
+    const fetchProfileData = async () => {
+      try {
+        setIsLoading(true)
+        const response = await getUserProfile()
+        const data = response.data
+        setProfileData({
+          firstName: data.firstName || data.name?.split(" ")[0] || "",
+          lastName: data.lastName || data.name?.split(" ")[1] || "",
+          email: data.email || "",
+          jobTitle: data.jobTitle || "",
+        })
+        if (data.avatar) {
+          setAvatarUrl(data.avatar)
+        }
+        setIsLoading(false)
+      } catch (error) {
+        console.error("Failed to fetch profile data:", error)
+        toast({
+          title: "Error",
+          description: "Failed to load profile data. Please try again.",
+          variant: "destructive",
+        })
+        setIsLoading(false)
+      }
+    }
+
+    fetchProfileData()
+  }, [toast])
+
+  // Handle profile update
+  const handleProfileUpdate = async () => {
+    try {
+      setIsLoading(true)
+      const updatedData = {
+        name: `${profileData.firstName} ${profileData.lastName}`,
+        email: profileData.email,
+        jobTitle: profileData.jobTitle,
+      }
+      await updateProfile(updatedData)
+      toast({
+        title: "Success",
+        description: "Profile information updated successfully.",
+      })
+      setIsLoading(false)
+    } catch (error) {
+      console.error("Failed to update profile:", error)
+      toast({
+        title: "Error",
+        description: "Failed to update profile. Please try again.",
+        variant: "destructive",
+      })
+      setIsLoading(false)
+    }
+  }
+
+  // Handle password update
+  const handlePasswordUpdate = async () => {
+    if (newPassword !== confirmPassword) {
+      toast({
+        title: "Error",
+        description: "New password and confirmation do not match.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    try {
+      setIsLoading(true)
+      await updatePassword({
+        currentPassword,
+        newPassword,
+      })
+      setCurrentPassword("")
+      setNewPassword("")
+      setConfirmPassword("")
+      toast({
+        title: "Success",
+        description: "Password updated successfully.",
+      })
+      setIsLoading(false)
+    } catch (error) {
+      console.error("Failed to update password:", error)
+      toast({
+        title: "Error",
+        description: "Failed to update password. Please check your current password and try again.",
+        variant: "destructive",
+      })
+      setIsLoading(false)
+    }
+  }
+
+  // Handle notification settings update
+  const handleNotificationSettingsUpdate = async () => {
+    try {
+      setIsLoading(true)
+      await updateNotificationSettings({
+        emailNotifications,
+        pushNotifications,
+      })
+      toast({
+        title: "Success",
+        description: "Notification settings updated successfully.",
+      })
+      setIsLoading(false)
+    } catch (error) {
+      console.error("Failed to update notification settings:", error)
+      toast({
+        title: "Error",
+        description: "Failed to update notification settings. Please try again.",
+        variant: "destructive",
+      })
+      setIsLoading(false)
+    }
+  }
+
+  // Handle privacy settings update
+  const handlePrivacySettingsUpdate = async () => {
+    try {
+      setIsLoading(true)
+      await updatePrivacySettings({
+        isPublic: profileVisibility === "public",
+        showEmail,
+      })
+      toast({
+        title: "Success",
+        description: "Privacy settings updated successfully.",
+      })
+      setIsLoading(false)
+    } catch (error) {
+      console.error("Failed to update privacy settings:", error)
+      toast({
+        title: "Error",
+        description: "Failed to update privacy settings. Please try again.",
+        variant: "destructive",
+      })
+      setIsLoading(false)
+    }
+  }
+
+  // Handle avatar upload
+  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const uploadedFile = await uploadFile(file);
+      const response = await updateAvatar(userProfileData.id, uploadedFile.fileUrl);
+      setAvatarUrl(response.avatar);
+      refetch()
+      toast({
+        title: 'Success',
+        description: 'Avatar updated successfully.',
+      });
+    } catch (err: unknown) { // <-- Error turini aniq qilish
+      const error = err as Error;
+      console.error('Failed to upload avatar:', error.message);
+
+      toast({
+        title: 'Error',
+        description: 'Failed to upload avatar. Please try again.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+
+  // Trigger file input click
+  const handleAvatarButtonClick = () => {
+
+    fileInputRef.current?.click()
+  }
 
   return (
     <div className="container mx-auto py-6 space-y-8">
@@ -81,15 +286,35 @@ export default function SettingsPage() {
               <div className="flex flex-col md:flex-row gap-6">
                 <div className="flex flex-col items-center space-y-2">
                   <Avatar className="h-24 w-24">
-                    <AvatarImage src="/placeholder.svg?height=96&width=96" alt="Profile" />
-                    <AvatarFallback>JD</AvatarFallback>
+                    <AvatarImage src={get(userProfileData, "avatar")} alt="Profile" />
+                    <AvatarFallback>
+                      {profileData.firstName?.[0]}
+                      {profileData.lastName?.[0]}
+                    </AvatarFallback>
                   </Avatar>
                   <div className="flex gap-2">
-                    <Button variant="outline" size="sm">
-                      <Upload className="h-4 w-4 mr-2" />
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      className="hidden"
+                      accept="image/*"
+                      onChange={handleAvatarUpload}
+                    />
+                    <Button variant="outline" size="sm" onClick={handleAvatarButtonClick} disabled={isLoading}>
+                      {isLoading ? (
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      ) : (
+                        <Upload className="h-4 w-4 mr-2" />
+                      )}
                       Change
                     </Button>
-                    <Button variant="outline" size="sm" className="text-destructive hover:text-destructive">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-destructive hover:text-destructive"
+                      disabled={isLoading || avatarUrl === "/placeholder.svg?height=96&width=96"}
+                      onClick={() => setAvatarUrl("/placeholder.svg?height=96&width=96")}
+                    >
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
@@ -98,26 +323,52 @@ export default function SettingsPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="firstName">First name</Label>
-                      <Input id="firstName" defaultValue="John" />
+                      <Input
+                        id="firstName"
+                        value={profileData.firstName}
+                        onChange={(e) => setProfileData({ ...profileData, firstName: e.target.value })}
+                      />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="lastName">Last name</Label>
-                      <Input id="lastName" defaultValue="Doe" />
+                      <Input
+                        id="lastName"
+                        value={profileData.lastName}
+                        onChange={(e) => setProfileData({ ...profileData, lastName: e.target.value })}
+                      />
                     </div>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="email">Email</Label>
-                    <Input id="email" type="email" defaultValue="john.doe@example.com" />
+                    <Input
+                      id="email"
+                      type="email"
+                      value={profileData.email}
+                      onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="headline">Professional Headline</Label>
-                    <Input id="headline" defaultValue="Senior Frontend Developer" />
+                    <Input
+                      id="headline"
+                      value={profileData.jobTitle}
+                      onChange={(e) => setProfileData({ ...profileData, jobTitle: e.target.value })}
+                    />
                   </div>
                 </div>
               </div>
             </CardContent>
             <CardFooter className="flex justify-end">
-              <Button>Save Changes</Button>
+              <Button onClick={handleProfileUpdate} disabled={isLoading}>
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  "Save Changes"
+                )}
+              </Button>
             </CardFooter>
           </Card>
 
@@ -215,6 +466,18 @@ export default function SettingsPage() {
                 <Switch checked={emailNotifications} onCheckedChange={setEmailNotifications} />
               </div>
             </CardContent>
+            <CardFooter className="flex justify-end">
+              <Button onClick={handleNotificationSettingsUpdate} disabled={isLoading}>
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  "Save Changes"
+                )}
+              </Button>
+            </CardFooter>
           </Card>
 
           <Card>
@@ -257,6 +520,18 @@ export default function SettingsPage() {
                 <Switch checked={pushNotifications} onCheckedChange={setPushNotifications} />
               </div>
             </CardContent>
+            <CardFooter className="flex justify-end">
+              <Button onClick={handleNotificationSettingsUpdate} disabled={isLoading}>
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  "Save Changes"
+                )}
+              </Button>
+            </CardFooter>
           </Card>
         </TabsContent>
 
@@ -289,7 +564,7 @@ export default function SettingsPage() {
                   <p className="font-medium">Show Email Address</p>
                   <p className="text-sm text-muted-foreground">Allow others to see your email address</p>
                 </div>
-                <Switch defaultChecked={false} />
+                <Switch checked={showEmail} onCheckedChange={setShowEmail} />
               </div>
               <Separator />
               <div className="flex items-center justify-between">
@@ -297,7 +572,7 @@ export default function SettingsPage() {
                   <p className="font-medium">Show Phone Number</p>
                   <p className="text-sm text-muted-foreground">Allow others to see your phone number</p>
                 </div>
-                <Switch defaultChecked={false} />
+                <Switch checked={showPhone} onCheckedChange={setShowPhone} />
               </div>
               <Separator />
               <div className="flex items-center justify-between">
@@ -305,9 +580,21 @@ export default function SettingsPage() {
                   <p className="font-medium">Show Online Status</p>
                   <p className="text-sm text-muted-foreground">Show when you're active on the platform</p>
                 </div>
-                <Switch defaultChecked={true} />
+                <Switch checked={showOnlineStatus} onCheckedChange={setShowOnlineStatus} />
               </div>
             </CardContent>
+            <CardFooter className="flex justify-end">
+              <Button onClick={handlePrivacySettingsUpdate} disabled={isLoading}>
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  "Save Changes"
+                )}
+              </Button>
+            </CardFooter>
           </Card>
 
           <Card>
@@ -408,6 +695,18 @@ export default function SettingsPage() {
                 </Select>
               </div>
             </CardContent>
+            <CardFooter className="flex justify-end">
+              <Button disabled={isLoading}>
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  "Save Changes"
+                )}
+              </Button>
+            </CardFooter>
           </Card>
 
           <Card>
@@ -446,6 +745,18 @@ export default function SettingsPage() {
                 <Switch defaultChecked={false} />
               </div>
             </CardContent>
+            <CardFooter className="flex justify-end">
+              <Button disabled={isLoading}>
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  "Save Changes"
+                )}
+              </Button>
+            </CardFooter>
           </Card>
 
           <Card>
@@ -501,6 +812,18 @@ export default function SettingsPage() {
                 <Switch defaultChecked={true} />
               </div>
             </CardContent>
+            <CardFooter className="flex justify-end">
+              <Button disabled={isLoading}>
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  "Save Changes"
+                )}
+              </Button>
+            </CardFooter>
           </Card>
         </TabsContent>
 
@@ -518,8 +841,8 @@ export default function SettingsPage() {
                   <Input
                     id="currentPassword"
                     type={showPassword ? "text" : "password"}
-                    value={passwordValue}
-                    onChange={(e) => setPasswordValue(e.target.value)}
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
                   />
                   <Button
                     variant="ghost"
@@ -533,13 +856,32 @@ export default function SettingsPage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="newPassword">New Password</Label>
-                <Input id="newPassword" type="password" />
+                <Input
+                  id="newPassword"
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="confirmPassword">Confirm New Password</Label>
-                <Input id="confirmPassword" type="password" />
+                <Input
+                  id="confirmPassword"
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                />
               </div>
-              <Button>Update Password</Button>
+              <Button onClick={handlePasswordUpdate} disabled={isLoading}>
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Updating...
+                  </>
+                ) : (
+                  "Update Password"
+                )}
+              </Button>
             </CardContent>
           </Card>
 

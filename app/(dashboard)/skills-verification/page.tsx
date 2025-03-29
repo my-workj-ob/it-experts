@@ -1,34 +1,90 @@
 "use client"
 
-import { useState } from "react"
+import { AddSkillModal } from "@/components/add-skills-modal"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Progress } from "@/components/ui/progress"
 import { Input } from "@/components/ui/input"
+import { Progress } from "@/components/ui/progress"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import useProfile from "@/hooks/profile/use-profile"
+import { skillService } from "@/services/skill-service"
+import { Skill } from "@/types/skills-types"
+import { useQuery } from "@tanstack/react-query"
+import { get } from "lodash"
 import {
-  Search,
+  AlertTriangle,
   Award,
+  BookOpen,
   CheckCircle,
   Clock,
-  Star,
-  Shield,
-  Trophy,
-  BookOpen,
+  Eye,
+  EyeOff,
   FileCheck,
-  Lock,
-  Zap,
-  AlertTriangle,
   HelpCircle,
   Info,
+  Lock,
   Plus,
+  Search,
+  Shield,
+  Star,
+  Trophy,
   Upload,
+  Zap,
 } from "lucide-react"
+import { useState } from "react"
 
 export default function SkillsVerificationPage() {
-  const [activeTab, setActiveTab] = useState("my-skills")
+  const [activeTab, setActiveTab] = useState<string>("my-skills");
+  const [isAddSkillModalOpen, setIsAddSkillModalOpen] = useState<boolean>(false);
+  const [searchQuery, setSearchQuery] = useState<string>("");
+
+  const { userProfileData } = useProfile();
+
+  // Fetch skills data using React Query
+  const { data: skill = [], isLoading, refetch } = useQuery({
+    queryKey: ["skills_by_profile_id", userProfileData?.id],
+    queryFn: async () => skillService.getSkillsProfileById(userProfileData?.id, false),
+    enabled: !!userProfileData?.id,
+  });
+
+  // Ensure `skills` has the correct structure
+  const skills: Skill[] = Array.isArray(get(skill, "data", [])) ? get(skill, "data", []) : [];
+
+  // Filter skills based on the search query
+  const filteredSkills = skills.filter((skill) => skill.name.toLowerCase().includes(searchQuery.toLowerCase()));
+
+  // Group skills by category
+  const groupedSkills = filteredSkills.reduce<Record<string, Skill[]>>(
+    (acc, skill) => {
+      const categoryName = skill.category?.name || "Uncategorized";
+      if (!acc[categoryName]) {
+        acc[categoryName] = [];
+      }
+      acc[categoryName].push(skill);
+      return acc;
+    },
+    {}
+  );
+
+  // Calculate verification stats
+  const verifiedSkillsCount = skills.filter((skill) => skill.isVerified).length;
+  const totalSkillsCount = skills.length;
+  const verificationPercentage = totalSkillsCount > 0 ? Math.round((verifiedSkillsCount / totalSkillsCount) * 100) : 0;
+
+  // Get total endorsements
+  const totalEndorsements = skills.reduce((sum, skill) => sum + skill.endorsements, 0);
+
+  // Toggle skill visibility
+  const toggleSkillVisibility = async (profileId: number, isPublic: boolean) => {
+    try {
+      await skillService.getSkillsProfileById(profileId, isPublic);
+      refetch();
+    } catch (error) {
+      console.error("Error updating skill visibility:", error);
+    }
+  };
 
   return (
     <div className="container mx-auto space-y-6">
@@ -60,141 +116,162 @@ export default function SkillsVerificationPage() {
         <TabsContent value="my-skills" className="space-y-6">
           <div className="flex flex-col md:flex-row gap-4 mb-6">
             <div className="relative flex-1">
-              <Input placeholder="Search your skills..." className="pl-10" />
+              <Input
+                placeholder="Search your skills..."
+                className="pl-10"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
               <div className="absolute left-3 top-3 text-muted-foreground">
                 <Search className="h-4 w-4" />
               </div>
             </div>
-            <Button variant="outline">
+            <Button variant="outline" onClick={() => setIsAddSkillModalOpen(true)}>
               <Zap className="h-4 w-4 mr-2" />
               Add Skills
             </Button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {isLoading ? (
+            <div className="flex justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            </div>
+          ) : skills.length === 0 ? (
             <Card>
-              <CardHeader>
-                <CardTitle>Technical Skills</CardTitle>
-                <CardDescription>Programming languages, frameworks, and tools</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {[
-                  { name: "JavaScript", level: 90, verified: true, endorsements: 28 },
-                  { name: "React", level: 85, verified: true, endorsements: 24 },
-                  { name: "TypeScript", level: 80, verified: false, endorsements: 15 },
-                  { name: "Node.js", level: 75, verified: true, endorsements: 19 },
-                  { name: "HTML/CSS", level: 95, verified: false, endorsements: 31 },
-                ].map((skill, index) => (
-                  <div key={index} className="space-y-2">
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium">{skill.name}</span>
-                        {skill.verified && (
-                          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                            <CheckCircle className="h-3 w-3 mr-1" />
-                            Verified
-                          </Badge>
-                        )}
-                      </div>
-                      <span className="text-sm text-muted-foreground">{skill.endorsements} endorsements</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Progress value={skill.level} className="h-2 flex-1" />
-                      <span className="text-sm font-medium">{skill.level}%</span>
-                    </div>
-                  </div>
-                ))}
-              </CardContent>
-              <CardFooter>
-                <Button variant="outline" className="w-full">
-                  <Shield className="h-4 w-4 mr-2" />
-                  Verify Skills
+              <CardContent className="flex flex-col items-center justify-center py-12">
+                <div className="rounded-full bg-muted p-3 mb-4">
+                  <Zap className="h-6 w-6 text-muted-foreground" />
+                </div>
+                <h3 className="text-lg font-medium mb-2">No skills added yet</h3>
+                <p className="text-muted-foreground text-center max-w-md mb-6">
+                  Add your skills to showcase your expertise and get endorsed by your connections.
+                </p>
+                <Button onClick={() => setIsAddSkillModalOpen(true)}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Your First Skill
                 </Button>
-              </CardFooter>
+              </CardContent>
             </Card>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Render skills by category */}
+              {Object.entries(groupedSkills).map(([categoryName, categorySkills]) => (
+                <Card key={categoryName}>
+                  <CardHeader>
+                    <CardTitle>{categoryName}</CardTitle>
+                    <CardDescription>
+                      {categoryName === "Technical Skills" && "Programming languages, frameworks, and tools"}
+                      {categoryName === "Soft Skills" && "Communication, leadership, and teamwork"}
+                      {categoryName === "Domain Knowledge" && "Industry-specific knowledge and expertise"}
+                      {!["Technical Skills", "Soft Skills", "Domain Knowledge"].includes(categoryName) &&
+                        `Skills related to ${categoryName.toLowerCase()}`}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {categorySkills.length > 0 ? (
+                      categorySkills.map((skill) => (
+                        <div key={skill.id} className="space-y-2">
+                          <div className="flex justify-between items-center">
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium">{skill.name}</span>
+                              {skill.isVerified && (
+                                <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                                  <CheckCircle className="h-3 w-3 mr-1" />
+                                  Verified
+                                </Badge>
+                              )}
+                              {skill.ownSkill && (
+                                <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                                  Owner
+                                </Badge>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <button
+                                className="text-muted-foreground hover:text-foreground"
+                                onClick={() => toggleSkillVisibility(userProfileData?.id, !skill.isPublic)}
+                                title={skill.isPublic ? "Make private" : "Make public"}
+                              >
+                                {skill.isPublic ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                              </button>
+                              <span className="text-sm text-muted-foreground">{skill.endorsements} endorsements</span>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Progress value={skill.percentage} className="h-2 flex-1" />
+                            <span className="text-sm font-medium">{skill.percentage}%</span>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-center py-4 text-muted-foreground">
+                        No {categoryName.toLowerCase()} added yet
+                      </div>
+                    )}
+                  </CardContent>
+                  <CardFooter>
+                    <Button variant="outline" className="w-full">
+                      <Shield className="h-4 w-4 mr-2" />
+                      Verify Skills
+                    </Button>
+                  </CardFooter>
+                </Card>
+              ))}
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Soft Skills</CardTitle>
-                <CardDescription>Communication, leadership, and teamwork</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {[
-                  { name: "Communication", level: 85, verified: true, endorsements: 22 },
-                  { name: "Teamwork", level: 90, verified: true, endorsements: 26 },
-                  { name: "Problem Solving", level: 88, verified: false, endorsements: 18 },
-                  { name: "Time Management", level: 75, verified: false, endorsements: 14 },
-                  { name: "Leadership", level: 80, verified: true, endorsements: 16 },
-                ].map((skill, index) => (
-                  <div key={index} className="space-y-2">
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium">{skill.name}</span>
-                        {skill.verified && (
-                          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                            <CheckCircle className="h-3 w-3 mr-1" />
-                            Verified
-                          </Badge>
-                        )}
-                      </div>
-                      <span className="text-sm text-muted-foreground">{skill.endorsements} endorsements</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Progress value={skill.level} className="h-2 flex-1" />
-                      <span className="text-sm font-medium">{skill.level}%</span>
-                    </div>
-                  </div>
-                ))}
-              </CardContent>
-              <CardFooter>
-                <Button variant="outline" className="w-full">
-                  <Shield className="h-4 w-4 mr-2" />
-                  Verify Skills
-                </Button>
-              </CardFooter>
-            </Card>
+              {/* If no categories are found, show default cards */}
+              {Object.keys(groupedSkills).length === 0 && (
+                <>
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Technical Skills</CardTitle>
+                      <CardDescription>Programming languages, frameworks, and tools</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-center py-4 text-muted-foreground">No technical skills added yet</div>
+                    </CardContent>
+                    <CardFooter>
+                      <Button variant="outline" className="w-full" onClick={() => setIsAddSkillModalOpen(true)}>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add Technical Skills
+                      </Button>
+                    </CardFooter>
+                  </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Domain Knowledge</CardTitle>
-                <CardDescription>Industry-specific knowledge and expertise</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {[
-                  { name: "Web Development", level: 88, verified: true, endorsements: 25 },
-                  { name: "E-commerce", level: 70, verified: false, endorsements: 12 },
-                  { name: "Fintech", level: 65, verified: false, endorsements: 8 },
-                  { name: "UI/UX Design", level: 75, verified: true, endorsements: 17 },
-                  { name: "Agile Methodology", level: 80, verified: false, endorsements: 14 },
-                ].map((skill, index) => (
-                  <div key={index} className="space-y-2">
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium">{skill.name}</span>
-                        {skill.verified && (
-                          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                            <CheckCircle className="h-3 w-3 mr-1" />
-                            Verified
-                          </Badge>
-                        )}
-                      </div>
-                      <span className="text-sm text-muted-foreground">{skill.endorsements} endorsements</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Progress value={skill.level} className="h-2 flex-1" />
-                      <span className="text-sm font-medium">{skill.level}%</span>
-                    </div>
-                  </div>
-                ))}
-              </CardContent>
-              <CardFooter>
-                <Button variant="outline" className="w-full">
-                  <Shield className="h-4 w-4 mr-2" />
-                  Verify Skills
-                </Button>
-              </CardFooter>
-            </Card>
-          </div>
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Soft Skills</CardTitle>
+                      <CardDescription>Communication, leadership, and teamwork</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-center py-4 text-muted-foreground">No soft skills added yet</div>
+                    </CardContent>
+                    <CardFooter>
+                      <Button variant="outline" className="w-full" onClick={() => setIsAddSkillModalOpen(true)}>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add Soft Skills
+                      </Button>
+                    </CardFooter>
+                  </Card>
+
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Domain Knowledge</CardTitle>
+                      <CardDescription>Industry-specific knowledge and expertise</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-center py-4 text-muted-foreground">No domain knowledge added yet</div>
+                    </CardContent>
+                    <CardFooter>
+                      <Button variant="outline" className="w-full" onClick={() => setIsAddSkillModalOpen(true)}>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add Domain Knowledge
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                </>
+              )}
+            </div>
+          )}
 
           <Card>
             <CardHeader>
@@ -205,22 +282,22 @@ export default function SkillsVerificationPage() {
               <div>
                 <div className="flex justify-between mb-1">
                   <span className="text-sm font-medium">Overall Verification</span>
-                  <span className="text-sm font-medium">60%</span>
+                  <span className="text-sm font-medium">{verificationPercentage}%</span>
                 </div>
-                <Progress value={60} className="h-2" />
+                <Progress value={verificationPercentage} className="h-2" />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
                 <div className="bg-muted rounded-lg p-4 text-center">
-                  <div className="text-3xl font-bold text-primary mb-1">7</div>
+                  <div className="text-3xl font-bold text-primary mb-1">{verifiedSkillsCount}</div>
                   <div className="text-sm text-muted-foreground">Verified Skills</div>
                 </div>
                 <div className="bg-muted rounded-lg p-4 text-center">
-                  <div className="text-3xl font-bold text-primary mb-1">3</div>
-                  <div className="text-sm text-muted-foreground">Certifications</div>
+                  <div className="text-3xl font-bold text-primary mb-1">{totalSkillsCount}</div>
+                  <div className="text-sm text-muted-foreground">Total Skills</div>
                 </div>
                 <div className="bg-muted rounded-lg p-4 text-center">
-                  <div className="text-3xl font-bold text-primary mb-1">42</div>
+                  <div className="text-3xl font-bold text-primary mb-1">{totalEndorsements}</div>
                   <div className="text-sm text-muted-foreground">Endorsements</div>
                 </div>
               </div>
@@ -249,6 +326,7 @@ export default function SkillsVerificationPage() {
         </TabsContent>
 
         <TabsContent value="assessments" className="space-y-6">
+          {/* Assessment content remains the same */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Card>
               <CardHeader>
@@ -445,6 +523,7 @@ export default function SkillsVerificationPage() {
         </TabsContent>
 
         <TabsContent value="certifications" className="space-y-6">
+          {/* Certifications content remains the same */}
           <div className="flex flex-col md:flex-row gap-4 mb-6">
             <div className="relative flex-1">
               <Input placeholder="Search certifications..." className="pl-10" />
@@ -634,18 +713,22 @@ export default function SkillsVerificationPage() {
                 <CardDescription>Skills endorsed by your connections</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {[
-                  { skill: "JavaScript", count: 28 },
-                  { skill: "React", count: 24 },
-                  { skill: "Node.js", count: 19 },
-                  { skill: "TypeScript", count: 15 },
-                  { skill: "HTML/CSS", count: 31 },
-                ].map((endorsement, index) => (
-                  <div key={index} className="flex justify-between items-center">
-                    <span className="font-medium">{endorsement.skill}</span>
-                    <Badge variant="secondary">{endorsement.count} endorsements</Badge>
+                {isLoading ? (
+                  <div className="flex justify-center py-4">
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
                   </div>
-                ))}
+                ) : skills.filter((s) => s.endorsements > 0).length > 0 ? (
+                  skills
+                    .filter((s) => s.endorsements > 0)
+                    .map((skill) => (
+                      <div key={skill.id} className="flex justify-between items-center">
+                        <span className="font-medium">{skill.name}</span>
+                        <Badge variant="secondary">{skill.endorsements} endorsements</Badge>
+                      </div>
+                    ))
+                ) : (
+                  <div className="text-center py-4 text-muted-foreground">No endorsements received yet</div>
+                )}
               </CardContent>
               <CardFooter>
                 <Button variant="outline" className="w-full">
@@ -837,6 +920,13 @@ export default function SkillsVerificationPage() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Add Skill Modal */}
+      <AddSkillModal
+        open={isAddSkillModalOpen}
+        onOpenChange={setIsAddSkillModalOpen}
+        profileId={userProfileData?.id?.toString() || ""}
+      />
     </div>
   )
 }

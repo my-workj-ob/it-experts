@@ -1,13 +1,15 @@
 "use client"
 
-import { useState } from "react"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { MapPin, Briefcase, Mail, Globe, Github, Linkedin, Edit, Plus } from "lucide-react"
 import { Progress } from "@/components/ui/progress"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import useProfile from "@/hooks/profile/use-profile"
+import { get } from "lodash"
+import { Briefcase, Edit, Github, Globe, Linkedin, Mail, MapPin, Plus } from "lucide-react"
+import { useState } from "react"
 
 // Mock data for demonstration
 const mockUser = {
@@ -77,9 +79,10 @@ const mockUser = {
   ],
 }
 
+
 export default function ProfilePage() {
   const [profileCompletion, setProfileCompletion] = useState(85)
-
+  const { userProfileData } = useProfile()
   return (
     <div className="container mx-auto space-y-6">
       <Card>
@@ -87,7 +90,7 @@ export default function ProfilePage() {
           <div className="flex flex-col md:flex-row gap-6">
             <div className="flex flex-col items-center md:items-start">
               <Avatar className="h-32 w-32 mb-4">
-                <AvatarImage src="/placeholder.svg?height=128&width=128" alt={mockUser.name} />
+                <AvatarImage src={get(userProfileData, "avatar", "/placeholder.svg?height=128&width=128")} alt={mockUser.name} />
                 <AvatarFallback>{mockUser.name.substring(0, 2)}</AvatarFallback>
               </Avatar>
               <div className="flex gap-2 mb-4">
@@ -107,7 +110,7 @@ export default function ProfilePage() {
                 </div>
                 <div className="flex items-center gap-2">
                   <Mail className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm">{mockUser.email}</span>
+                  <span className="text-sm">{String(get(userProfileData, "email")).split(" ", 5).join("...")}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Globe className="h-4 w-4 text-muted-foreground" />
@@ -155,10 +158,11 @@ export default function ProfilePage() {
             <div className="flex-1">
               <div className="space-y-4">
                 <div>
-                  <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary to-indigo-600">
-                    {mockUser.name}
+                  <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary space-x-2 to-indigo-600">
+                    <span>{get(userProfileData, "firstName")}</span>
+                    <span>{get(userProfileData, "lastName")}</span>
                   </h1>
-                  <p className="text-xl text-indigo-500 dark:text-indigo-400">{mockUser.role}</p>
+                  <p className="text-xl text-indigo-500 dark:text-indigo-400">{get(userProfileData, "jobTitle", "FullStack Developer")}</p>
                 </div>
                 <p className="text-muted-foreground">{mockUser.bio}</p>
 

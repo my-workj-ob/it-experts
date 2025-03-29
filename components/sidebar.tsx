@@ -241,19 +241,19 @@ export default function Sidebar() {
   }
 
   return (
-    <div className="hidden md:flex flex-col w-64 border-r bg-[#0a0d14] h-[calc(100vh-4rem)] sticky top-16">
+    <div className="hidden md:flex flex-col w-64 border-r bg-background dark:bg-[#0a0d14] h-[calc(100vh-4rem)] sticky top-16">
       <ScrollArea className="flex-1 pt-3">
         <nav className="grid gap-2 px-2">
           {/* Main Section Header */}
           <div
-            className="flex items-center justify-between px-3 py-2 cursor-pointer hover:bg-gray-800/50 rounded-md"
+            className="flex items-center justify-between px-3 py-2 cursor-pointer hover:bg-muted/80 dark:hover:bg-gray-800/50 rounded-md"
             onClick={() => toggleSection("main")}
           >
-            <span className="font-semibold text-sm text-gray-200">MAIN NAVIGATION</span>
+            <span className="font-semibold text-sm text-foreground dark:text-gray-200">MAIN NAVIGATION</span>
             {expandedSections.main ? (
-              <ChevronDown className="h-4 w-4 text-gray-400" />
+              <ChevronDown className="h-4 w-4 text-muted-foreground dark:text-gray-400" />
             ) : (
-              <ChevronRight className="h-4 w-4 text-gray-400" />
+              <ChevronRight className="h-4 w-4 text-muted-foreground dark:text-gray-400" />
             )}
           </div>
 
@@ -265,11 +265,16 @@ export default function Sidebar() {
                   <Button
                     variant="ghost"
                     className={cn(
-                      "w-full justify-start gap-4 px-3 hover:bg-gray-800/70 text-gray-300",
-                      route.active && "bg-gray-800/90 text-white",
+                      "w-full justify-start gap-4 px-3 hover:bg-muted/80 text-foreground/80 dark:hover:bg-gray-800/70 dark:text-gray-300",
+                      route.active && "bg-muted/90 dark:bg-gray-800/90 dark:text-white",
                     )}
                   >
-                    <route.icon className={cn("h-5 w-5", route.active ? "text-white" : "text-gray-400")} />
+                    <route.icon
+                      className={cn(
+                        "h-5 w-5",
+                        route.active ? "text-white" : "text-muted-foreground dark:text-gray-400",
+                      )}
+                    />
                     <span>{route.label}</span>
                   </Button>
                 </Link>

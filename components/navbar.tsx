@@ -1,11 +1,9 @@
 "use client"
 
-import Link from "next/link"
-import { useState } from "react"
-import { Bell, Search, Zap, Video } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { ModeToggle } from "@/components/mode-toggle"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,17 +12,20 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { ModeToggle } from "@/components/mode-toggle"
-import { Badge } from "@/components/ui/badge"
-import { usePathname } from "next/navigation"
+import { Input } from "@/components/ui/input"
+import useProfile from "@/hooks/profile/use-profile"
+import { get } from "lodash"
+import { Bell, Search, Video, Zap } from "lucide-react"
+import Link from "next/link"
+import { useState } from "react"
 
 export default function Navbar() {
   const [isLoggedIn, setIsLoggedIn] = useState(true) // Set to true for demo
-  const pathname = usePathname()
+  const { userProfileData } = useProfile()
 
   return (
-    <header className="sticky top-0 z-30 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 items-center justify-between">
+    <header className=" sticky top-0 z-30 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="container m-auto flex h-16 items-center justify-between">
         <div className="hidden md:block w-full max-w-sm">
           <div className="relative">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -75,7 +76,7 @@ export default function Navbar() {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                     <Avatar className="h-8 w-8">
-                      <AvatarImage src="/placeholder.svg?height=32&width=32" alt="@user" />
+                      <AvatarImage src={get(userProfileData, "avatar", "/placeholder.svg?height=32&width=32")} alt="@user" />
                       <AvatarFallback>UN</AvatarFallback>
                     </Avatar>
                   </Button>

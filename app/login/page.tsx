@@ -1,31 +1,115 @@
 "use client"
 
-import type React from "react"
-
-import { useState } from "react"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { ModeToggle } from "@/components/mode-toggle"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Github, Mail } from "lucide-react"
-import { ModeToggle } from "@/components/mode-toggle"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { useToast } from "@/hooks/use-toast"
+import AuthService from "@/services/auth-service"
+import { UserCredentials } from "@/types/auth-types"
+import { Github, Loader2, Mail } from 'lucide-react'
+import Link from "next/link"
+import { useRouter } from "next/navigation"
+import type React from "react"
+import { useState } from "react"
 
 export default function LoginPage() {
   const router = useRouter()
+  const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
+  const [formData, setFormData] = useState<UserCredentials & { rememberMe: boolean }>({
+    email: "",
+    password: "",
+    rememberMe: false
+  })
+  const [errors, setErrors] = useState<{ [key: string]: string }>({})
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({
+      ...formData,
+      [e.target.id]: e.target.value
+    })
+
+    // Clear error when user types
+    if (errors[e.target.id]) {
+      setErrors({
+        ...errors,
+        [e.target.id]: ""
+      })
+    }
+  }
+
+  const handleCheckboxChange = (checked: boolean) => {
+    setFormData({
+      ...formData,
+      rememberMe: checked
+    })
+  }
+
+  const validateForm = () => {
+    const newErrors: { [key: string]: string } = {}
+
+    if (!formData.email) newErrors.email = "Email is required"
+    if (!/^\S+@\S+\.\S+$/.test(formData.email)) newErrors.email = "Invalid email format"
+    if (!formData.password) newErrors.password = "Password is required"
+
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    if (!validateForm()) {
+      return
+    }
+
     setIsLoading(true)
 
-    // Simulate login
-    setTimeout(() => {
-      setIsLoading(false)
+    try {
+      // Extract login credentials
+      const { email, password, rememberMe } = formData
+
+      // Call the login method from AuthService
+      await AuthService.login({ email, password })
+
+      // If remember me is checked, we could set a longer expiration for the token
+      // This would typically be handled on the server side
+      if (rememberMe) {
+        // For demonstration purposes only
+        // In a real app, this would be handled by the server
+        localStorage.setItem('rememberMe', 'true')
+      }
+
+      toast({
+        title: "Login successful",
+        description: "Welcome back to DevConnect!",
+      })
+
+      // Redirect to dashboard
       router.push("/dashboard")
-    }, 1500)
+    } catch (error: any) {
+      console.error("Login error:", error)
+
+      // Handle different error types
+      if (error.response?.status === 401) {
+        toast({
+          title: "Login failed",
+          description: "Invalid email or password",
+          variant: "destructive"
+        })
+      } else {
+        toast({
+          title: "Login failed",
+          description: error.response?.data?.message || "Something went wrong. Please try again.",
+          variant: "destructive"
+        })
+      }
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -54,7 +138,17 @@ export default function LoginPage() {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" placeholder="name@example.com" required />
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="name@example.com"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  required
+                />
+                {errors.email && (
+                  <p className="text-sm text-red-500">{errors.email}</p>
+                )}
               </div>
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
@@ -63,12 +157,25 @@ export default function LoginPage() {
                     Forgot password?
                   </Link>
                 </div>
-                <Input id="password" type="password" required />
+                <Input
+                  id="password"
+                  type="password"
+                  value={formData.password}
+                  onChange={handleInputChange}
+                  required
+                />
+                {errors.password && (
+                  <p className="text-sm text-red-500">{errors.password}</p>
+                )}
               </div>
               <div className="flex items-center space-x-2">
-                <Checkbox id="remember" />
+                <Checkbox
+                  id="rememberMe"
+                  checked={formData.rememberMe}
+                  onCheckedChange={handleCheckboxChange}
+                />
                 <Label
-                  htmlFor="remember"
+                  htmlFor="rememberMe"
                   className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                 >
                   Remember me
@@ -79,7 +186,14 @@ export default function LoginPage() {
                 className="w-full bg-gradient-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-600/90"
                 disabled={isLoading}
               >
-                {isLoading ? "Logging in..." : "Login"}
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Logging in...
+                  </>
+                ) : (
+                  "Login"
+                )}
               </Button>
             </form>
 
@@ -116,4 +230,3 @@ export default function LoginPage() {
     </div>
   )
 }
-
