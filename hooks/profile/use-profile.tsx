@@ -5,7 +5,7 @@ import { get } from 'lodash'
 const useProfile = () => {
 
   const { data, refetch } = useQuery({
-    queryKey: ["profile"],
+    queryKey: ["/profile"],
     queryFn: () => ProfileService.getUserProfile()
 
   })

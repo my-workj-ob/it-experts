@@ -37,13 +37,15 @@ export const ProfileService = {
 	// Update password
 	updatePassword: async (passwordData: PasswordUpdateData) => {
 		try {
-			const response = await fetch('/api/profile', {
-				method: 'PATCH',
-				headers: {
-					'Content-Type': 'application/json',
-				},
-				body: JSON.stringify(passwordData),
-			});
+			const response = await axiosInstance.patch(
+				'/profile/password',
+				passwordData,
+				{
+					headers: {
+						'Content-Type': 'application/json',
+					},
+				}
+			);
 
 			if (!response.ok) {
 				throw new Error('Failed to update password');
