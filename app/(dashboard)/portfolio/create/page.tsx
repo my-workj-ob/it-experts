@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
 import axiosInstance from "@/lib/create-axios"
-import { createProject, projectCategories, projectStatuses, uploadFile } from "@/services/project-service"
+import { createProject, projectStatuses, uploadFile } from "@/services/project-service"
 import { Code, Github, Globe, Image, Tag, Upload, X } from "lucide-react"
 import { useRouter } from "next/navigation"
 import type React from "react"
@@ -91,7 +91,6 @@ export default function CreateProjectPage() {
   const [coverImageFile, setCoverImageFile] = useState<File | null>(null)
   const [additionalImageFiles, setAdditionalImageFiles] = useState<File[]>([])
   const [codeSnippetFiles, setCodeSnippetFiles] = useState<File[]>([])
-  projectCategories
   // Upload progress state
   const [uploadProgress, setUploadProgress] = useState(0)
   useEffect(() => {
