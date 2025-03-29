@@ -3,22 +3,18 @@ import axios from 'axios';
 const getApiUrl = () => {
 	if (typeof window !== 'undefined') {
 		const hostname = window.location.hostname;
-
 		if (hostname === 'localhost') {
 			return 'http://localhost:3030'; // Local development
 		} else if (hostname === 'staging.example.com') {
-			return 'https://backend-lesb.onrender.com'; // Staging muhit
+			return 'https://backend-lesb.onrender.com'; // Staging
 		} else {
-			return 'https://backend-lesb.onrender.com'; // Production muhit
+			return 'https://backend-lesb.onrender.com'; // Production
 		}
 	}
-
 	return process.env.NEXT_PUBLIC_API_URL || 'https://backend-lesb.onrender.com';
 };
 
-// Create axios instance with base URL
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.example.com';
-
+// Axios instance yaratish
 export const axiosInstance = axios.create({
 	baseURL: getApiUrl(),
 	headers: {
@@ -26,67 +22,65 @@ export const axiosInstance = axios.create({
 	},
 });
 
-// Request interceptor
+// Request interceptor (har bir so‘rov oldidan token qo‘shish)
 axiosInstance.interceptors.request.use(
 	config => {
-		// Get token from localStorage
 		const token = localStorage.getItem('accessToken');
-
-		// If token exists, add it to request headers
 		if (token) {
 			config.headers.Authorization = `Bearer ${token}`;
 		}
-
 		return config;
 	},
-	error => {
-		return Promise.reject(error);
-	}
+	error => Promise.reject(error)
 );
 
-// Response interceptor
+// Response interceptor (401 bo‘lsa, tokenni yangilash)
 axiosInstance.interceptors.response.use(
-	response => {
-		return response;
-	},
+	response => response,
 	async error => {
 		const originalRequest = error.config;
 
-		// If error is 401 (Unauthorized) and we haven't tried to refresh the token yet
+		// Agar 401 bo‘lsa va oldin token yangilashga harakat qilmagan bo‘lsak
 		if (error.response?.status === 401 && !originalRequest._retry) {
 			originalRequest._retry = true;
 
+			const refreshToken = localStorage.getItem('refreshToken');
+
+			// **Agar refresh token yo‘q bo‘lsa yoki user allaqachon login sahifasida bo‘lsa, hech narsa qilmaymiz**
+			if (!refreshToken || window.location.pathname === '/login') {
+				console.warn('Refresh token yo‘q yoki allaqachon login sahifasidasiz.');
+				return Promise.reject(error);
+			}
+
 			try {
-				// Try to refresh the token
-				const refreshToken = localStorage.getItem('refreshToken');
-
-				if (!refreshToken) {
-					// If no refresh token, redirect to login
-					window.location.href = '/login';
-					return Promise.reject(error);
-				}
-
-				// Call refresh token endpoint
-				const response = await axiosInstance.post('/auth/refresh-token', {
+				// Refresh token bilan yangi token olish
+				const response = await axios.post(`${getApiUrl()}/auth/refresh-token`, {
 					refreshToken,
 				});
 
-				// Save new tokens
 				const { accessToken, refreshToken: newRefreshToken } = response.data;
+
+				// Yangi tokenlarni saqlash
 				localStorage.setItem('accessToken', accessToken);
-
-				if (newRefreshToken) {
+				if (newRefreshToken)
 					localStorage.setItem('refreshToken', newRefreshToken);
-				}
 
-				// Update Authorization header and retry the original request
+				// Eski so‘rovni qayta jo‘natish
 				originalRequest.headers.Authorization = `Bearer ${accessToken}`;
 				return axiosInstance(originalRequest);
 			} catch (refreshError) {
-				// If refresh token fails, redirect to login
+				// Agar refresh token ishlamasa, foydalanuvchini tashqariga chiqaramiz
+				console.warn(
+					'Refresh token ishlamadi, foydalanuvchi tashqariga chiqarildi.'
+				);
 				localStorage.removeItem('accessToken');
 				localStorage.removeItem('refreshToken');
-				window.location.href = '/login';
+
+				// **Agar hozir login sahifasida bo‘lsa, yana /login sahifasiga yo‘naltirmaymiz**
+				if (window.location.pathname !== '/login') {
+					window.location.href = '/login';
+				}
+
 				return Promise.reject(refreshError);
 			}
 		}
