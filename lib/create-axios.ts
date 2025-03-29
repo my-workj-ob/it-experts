@@ -1,10 +1,29 @@
 import axios from 'axios';
 
+const getApiUrl = () => {
+	if (typeof window !== 'undefined') {
+		const hostname = window.location.hostname;
+
+		if (hostname === 'localhost') {
+			return 'http://localhost:3030'; // Local development
+		} else if (hostname === 'staging.example.com') {
+			return 'https://backend-lesb.onrender.com/api/docs'; // Staging muhit
+		} else {
+			return 'https://backend-lesb.onrender.com/api/docs'; // Production muhit
+		}
+	}
+
+	return (
+		process.env.NEXT_PUBLIC_API_URL ||
+		'https://backend-lesb.onrender.com/api/docs'
+	);
+};
+
 // Create axios instance with base URL
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.example.com';
 
 export const axiosInstance = axios.create({
-	baseURL: API_URL,
+	baseURL: getApiUrl(),
 	headers: {
 		'Content-Type': 'application/json',
 	},
