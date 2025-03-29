@@ -7,16 +7,13 @@ const getApiUrl = () => {
 		if (hostname === 'localhost') {
 			return 'http://localhost:3030'; // Local development
 		} else if (hostname === 'staging.example.com') {
-			return 'https://backend-lesb.onrender.com/api/docs'; // Staging muhit
+			return 'https://backend-lesb.onrender.com'; // Staging muhit
 		} else {
-			return 'https://backend-lesb.onrender.com/api/docs'; // Production muhit
+			return 'https://backend-lesb.onrender.com'; // Production muhit
 		}
 	}
 
-	return (
-		process.env.NEXT_PUBLIC_API_URL ||
-		'https://backend-lesb.onrender.com/api/docs'
-	);
+	return process.env.NEXT_PUBLIC_API_URL || 'https://backend-lesb.onrender.com';
 };
 
 // Create axios instance with base URL
