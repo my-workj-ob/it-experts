@@ -1,6 +1,7 @@
 "use client"
 import Navbar from "@/components/navbar"
 import { ThemeProvider } from "@/components/theme-provider"
+import { AuthProvider } from "@/hooks/auth/useAuth"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { Inter } from "next/font/google"
 import type React from "react"
@@ -20,10 +21,12 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.className}>
         <QueryClientProvider client={queryClient} >
-          <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-            <Navbar />
-            <main className="flex-1 py-12 px-4 md:px-8">{children}</main>
-          </ThemeProvider>
+          <AuthProvider>
+            <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+              <Navbar />
+              <main className="flex-1 py-12 px-4 md:px-8">{children}</main>
+            </ThemeProvider>
+          </AuthProvider>
         </QueryClientProvider>
       </body>
     </html >
@@ -33,3 +36,4 @@ export default function RootLayout({
 
 
 import './globals.css'
+

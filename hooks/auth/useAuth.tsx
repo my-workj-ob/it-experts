@@ -8,6 +8,7 @@ import {
 	useState,
 	type ReactNode,
 } from 'react';
+import useProfile from '../profile/use-profile';
 
 interface User {
 	id: string;
@@ -32,21 +33,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 	const [isLoading, setIsLoading] = useState(true);
 	const [isAuthenticated, setIsAuthenticated] = useState(false);
 
+	// useProfile hook dan ma'lumot olish
+	const { userProfileData } = useProfile();
+
 	useEffect(() => {
-		// Check if user is authenticated on initial load
 		const checkAuth = async () => {
 			const token = AuthService.getToken();
 
 			if (token) {
 				setIsAuthenticated(true);
-				// You might want to fetch user data here if needed
+			}
+
+			// userProfileData mavjud bo'lsa, uni user sifatida o'rnatish
+			if (userProfileData && userProfileData.id) {
+				setUser(userProfileData);
 			}
 
 			setIsLoading(false);
 		};
 
 		checkAuth();
-	}, []);
+	}, [userProfileData]); // userProfileData o'zgarishlarini kuzatish uchun dependency arrayga qo'shildi
 
 	const login = async (email: string, password: string) => {
 		setIsLoading(true);
@@ -99,7 +106,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 export const useAuth = () => {
 	const context = useContext(AuthContext);
 	if (context === undefined) {
-
 		throw new Error('useAuth must be used within an AuthProvider');
 	}
 	return context;

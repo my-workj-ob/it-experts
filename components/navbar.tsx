@@ -13,18 +13,18 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
+import useAuthStatus from "@/hooks/auth/use-auth-status"
 import useProfile from "@/hooks/profile/use-profile"
 import { get } from "lodash"
 import { Bell, Search, Video, Zap } from "lucide-react"
 import Link from "next/link"
-import { useState } from "react"
 
 export default function Navbar() {
-  const [isLoggedIn, setIsLoggedIn] = useState(true) // Set to true for demo
+  const { isLoggedIn } = useAuthStatus()
   const { userProfileData } = useProfile()
 
   return (
-    <header className=" sticky top-0 z-30 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-30 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container m-auto flex h-16 items-center justify-between">
         <div className="hidden md:block w-full max-w-sm">
           <div className="relative">
@@ -133,7 +133,7 @@ export default function Navbar() {
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem className="text-red-500 focus:text-red-500" onClick={() => setIsLoggedIn(false)}>
+                  <DropdownMenuItem className="text-red-500 focus:text-red-500">
                     Logout
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -165,4 +165,3 @@ export default function Navbar() {
     </header>
   )
 }
-

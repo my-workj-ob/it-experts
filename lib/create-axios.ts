@@ -16,7 +16,7 @@ const getApiUrl = () => {
 
 // Axios instance yaratish
 export const axiosInstance = axios.create({
-	baseURL: 'https://backend-lesb.onrender.com',
+	baseURL: getApiUrl(),
 	headers: {
 		'Content-Type': 'application/json',
 	},

@@ -1,27 +1,11 @@
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { ArrowRight, Users, Calendar, MessageSquare, Zap, CheckCircle, Star, Shield, Sparkles } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { ArrowRight, Calendar, CheckCircle, MessageSquare, Shield, Sparkles, Star, Users, Zap } from "lucide-react"
+import Link from "next/link"
 
 export default function LandingPage() {
   return (
     <div className="flex flex-col min-h-screen">
-      {/* Hero Section */}
-      <header className="bg-gradient-to-r from-primary/10 to-indigo-500/10 dark:from-primary/5 dark:to-indigo-500/5 py-6">
-        <div className="container mx-auto px-4 flex justify-between items-center">
-          <div className="flex items-center">
-            <h1 className="text-2xl font-bold text-primary">DevConnect</h1>
-          </div>
-          <div className="flex items-center space-x-4">
-            <Button variant="ghost" asChild>
-              <Link href="/login">Login</Link>
-            </Button>
-            <Button asChild>
-              <Link href="/register">Sign Up Free</Link>
-            </Button>
-          </div>
-        </div>
-      </header>
 
       <main>
         {/* Hero Section */}
