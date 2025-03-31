@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
 import useAuthStatus from "@/hooks/auth/use-auth-status"
+import useAuth from "@/hooks/auth/useAuth"
 import useProfile from "@/hooks/profile/use-profile"
 import { get } from "lodash"
 import { Bell, Search, Video, Zap } from "lucide-react"
@@ -22,6 +23,7 @@ import Link from "next/link"
 export default function Navbar() {
   const { isLoggedIn } = useAuthStatus()
   const { userProfileData } = useProfile()
+  const { logout } = useAuth()
 
   return (
     <header className="sticky top-0 z-30 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -133,7 +135,7 @@ export default function Navbar() {
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem className="text-red-500 focus:text-red-500">
+                  <DropdownMenuItem className="text-red-500 focus:text-red-500" onClick={logout}>
                     Logout
                   </DropdownMenuItem>
                 </DropdownMenuContent>

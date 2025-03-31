@@ -106,7 +106,7 @@ export default function RegisterPage() {
       })
 
       // Redirect to dashboard
-      router.push("/dashboard")
+      window.location.href = "/dashboard"
     } catch (error: any) {
       console.error("Registration error:", error)
       toast({
