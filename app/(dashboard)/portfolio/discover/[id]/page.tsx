@@ -149,22 +149,13 @@ const deleteComment = async (commentId: string) => {
   }
 }
 
+// Update the likeComment function to match the API endpoint
 const likeComment = async (commentId: string) => {
   try {
-    const response = await axiosInstance.post(`/comments/${commentId}/like`)
+    const response = await axiosInstance.post(`/likes/${commentId}/like`)
     return response.data
   } catch (error) {
     console.error("Error liking comment:", error)
-    return null
-  }
-}
-
-const unlikeComment = async (commentId: string) => {
-  try {
-    const response = await axiosInstance.delete(`/comments/${commentId}/like`)
-    return response.data
-  } catch (error) {
-    console.error("Error unliking comment:", error)
     return null
   }
 }
@@ -189,25 +180,20 @@ export default function DiscoverProjectDetailPage() {
 
   const { id } = useParams<{ id: string }>()
 
-  const [likeStatus, setLikeStatus] = useState<boolean>();
-
+  const [likeStatus, setLikeStatus] = useState<boolean>()
+  const [commentLike, setCommentLike] = useState(false)
   useEffect(() => {
     try {
-
       const ProjectLikeStatus = async () => {
         const res = await axiosInstance.get(`/projects/${id}/like/status?userId=${get(userProfileData, "id")}`)
 
         setLikeStatus(res.data)
         ProjectLikeStatus()
-
       }
     } catch (error) {
-      console.log(error);
-
+      console.log(error)
     }
   }, [])
-
-
 
   const handleReplySubmit = async (parentCommentId: string) => {
     if (!replyContent.trim() || isSubmittingComment) return
@@ -280,7 +266,7 @@ export default function DiscoverProjectDetailPage() {
     }
 
     fetchProjectData()
-  }, [id, likeLoading])
+  }, [id, likeLoading, commentLike])
 
   const handleLike = async () => {
     try {
@@ -292,7 +278,6 @@ export default function DiscoverProjectDetailPage() {
       if (!isLiked) {
         setProject(project)
       }
-
     } catch (error) {
       console.error("Error updating like status:", error)
       setIsLiked(isLiked) // Revert on error
@@ -312,6 +297,7 @@ export default function DiscoverProjectDetailPage() {
     }
   }
 
+  // Update the handleCommentSubmit function to properly create a new comment
   const handleCommentSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!newComment.trim() || isSubmittingComment) return
@@ -321,17 +307,17 @@ export default function DiscoverProjectDetailPage() {
       const addedComment = await addProjectComment(id, newComment)
 
       if (addedComment) {
-        // Add replies array to the new comment
-        addedComment.replies = []
+        // After successful API call, fetch all comments again to ensure correct structure
+        const updatedComments = await getProjectComments(id)
+        setComments(updatedComments)
+        setNewComment("")
 
-        setComments([addedComment, ...comments])
+        // Increment the comment count
         setProject({
           ...project,
           commentsCount: (project.commentsCount || 0) + 1,
         })
       }
-
-      setNewComment("")
     } catch (error) {
       console.error("Error submitting comment:", error)
     } finally {
@@ -367,60 +353,17 @@ export default function DiscoverProjectDetailPage() {
     }
   }
 
+  // Update the handleCommentLike function to properly like a comment
   const handleCommentLike = async (commentId: string) => {
-    const isCurrentlyLiked = likedComments[commentId]
-
-    // Optimistically update UI
-    setLikedComments({
-      ...likedComments,
-      [commentId]: !isCurrentlyLiked,
-    })
-
-    // Update the likes count in the comments state
-    const updatedComments = comments.map((comment) => {
-      if (comment.id === Number.parseInt(commentId)) {
-        const newLikesCount = isCurrentlyLiked ? Math.max(0, (comment.likes || 0) - 1) : (comment.likes || 0) + 1
-
-        return { ...comment, likes: newLikesCount }
-      }
-
-      // Check if the comment is in replies
-      if (comment.replies) {
-        const updatedReplies = comment.replies.map((reply: any) => {
-          if (reply.id === Number.parseInt(commentId)) {
-            const newLikesCount = isCurrentlyLiked ? Math.max(0, (reply.likes || 0) - 1) : (reply.likes || 0) + 1
-
-            return { ...reply, likes: newLikesCount }
-          }
-          return reply
-        })
-
-        return { ...comment, replies: updatedReplies }
-      }
-
-      return comment
-    })
-
-    setComments(updatedComments)
-
     try {
-      // Call the appropriate API based on the current state
-      if (isCurrentlyLiked) {
-        await unlikeComment(commentId)
-      } else {
-        await likeComment(commentId)
-      }
+
+
+      const response = await likeComment(commentId)
+      setCommentLike(response)
     } catch (error) {
-      console.error("Error updating comment like status:", error)
+      console.error("Error liking comment:", error)
+      // Revert the like status on error
 
-      // Revert on error
-      setLikedComments({
-        ...likedComments,
-        [commentId]: isCurrentlyLiked,
-      })
-
-      // Revert the likes count in the comments state
-      setComments(comments)
     }
   }
 
@@ -520,6 +463,7 @@ export default function DiscoverProjectDetailPage() {
     if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)} days ago`
     return formatDate(dateString)
   }
+  console.log(comments);
 
   return (
     <div className="container mx-auto py-8">
@@ -543,7 +487,11 @@ export default function DiscoverProjectDetailPage() {
             <Share2 className="h-4 w-4" />
           </Button>
           <Button variant={isLiked ? "default" : "outline"} size="icon" onClick={handleLike}>
-            {likeLoading ? <Loader className="animate-spin" /> : < Heart className={`h-4 w-4 ${isLiked ? "fill-current" : ""}`} />}
+            {likeLoading ? (
+              <Loader className="animate-spin" />
+            ) : (
+              <Heart className={`h-4 w-4 ${isLiked ? "fill-current" : ""}`} />
+            )}
           </Button>
           <Button variant={isBookmarked ? "default" : "outline"} size="icon" onClick={handleBookmark}>
             <Bookmark className={`h-4 w-4 ${isBookmarked ? "fill-current" : ""}`} />
@@ -556,7 +504,12 @@ export default function DiscoverProjectDetailPage() {
           <Card>
             <CardContent className="p-0">
               <img
-                src={get(userProfileData, "avatar") || "/placeholder.svg"}
+                src={
+                  get(
+                    get(project, "imageUrl") ? JSON.parse(project.imageUrl) : { fileUrl: "/placeholder.svg" },
+                    "fileUrl",
+                  ) || "/placeholder.svg"
+                }
                 alt={get(project, "title", "Project Image")}
                 className="w-full h-[400px] object-cover rounded-t-lg"
               />
@@ -628,7 +581,7 @@ export default function DiscoverProjectDetailPage() {
                   <AvatarFallback>{userProfileData?.name?.charAt(0) || "U"}</AvatarFallback>
                 </Avatar>
                 <div className="flex-1">
-                  <form onSubmit={handleCommentSubmit}>
+                  <form onSubmit={(e) => handleCommentSubmit(e)}>
                     <Textarea
                       placeholder="Add a comment..."
                       value={newComment}
@@ -683,9 +636,9 @@ export default function DiscoverProjectDetailPage() {
                             onClick={() => handleCommentLike(comment.id.toString())}
                           >
                             <ThumbsUp
-                              className={`h-3.5 w-3.5 mr-1 ${likedComments[comment.id] ? "fill-blue-500" : ""}`}
+                              className={`h-3.5 w-3.5 mr-1 ${comment?.likedByCurrentUser ? "fill-blue-500" : ""}`}
                             />
-                            {comment.likes || 0}
+                            {comment.likesCount || 0}
                           </button>
                           <button
                             className="hover:text-foreground"
@@ -761,62 +714,64 @@ export default function DiscoverProjectDetailPage() {
                             {showReplies[comment.id] && (
                               <div className="mt-2 pl-6 space-y-4">
                                 {comment.replies.map((reply: any) => {
-                                  console.log(reply);
+                                  console.log(reply)
 
-                                  return <div key={reply.id} className="flex gap-3">
-                                    <Avatar className="h-8 w-8 rounded-full">
-                                      <AvatarImage
-                                        src={reply.user?.profile?.avatar || "/placeholder.svg?height=32&width=32"}
-                                        alt={reply.user?.profile?.name || "User"}
-                                        className="rounded-full"
-                                      />
-                                      <AvatarFallback className="rounded-full">
-                                        {reply.user?.profile?.firstName?.charAt(0) ||
-                                          reply.user?.profile?.name?.charAt(0) ||
-                                          "U"}
-                                      </AvatarFallback>
-                                    </Avatar>
-                                    <div className="flex-1">
-                                      <div className="flex items-center">
+                                  return (
+                                    <div key={reply.id} className="flex gap-3">
+                                      <Avatar className="h-8 w-8 rounded-full">
+                                        <AvatarImage
+                                          src={reply.user?.profile?.avatar || "/placeholder.svg?height=32&width=32"}
+                                          alt={reply.user?.profile?.name || "User"}
+                                          className="rounded-full"
+                                        />
+                                        <AvatarFallback className="rounded-full">
+                                          {reply.user?.profile?.firstName?.charAt(0) ||
+                                            reply.user?.profile?.name?.charAt(0) ||
+                                            "U"}
+                                        </AvatarFallback>
+                                      </Avatar>
+                                      <div className="flex-1">
                                         <div className="flex items-center">
-                                          <h5 className="font-medium text-xs">
-                                            {reply.user?.profile?.firstName ||
-                                              reply.user?.profile?.name ||
-                                              "Anonymous User"}
-                                          </h5>
-                                          {isProjectOwner(reply.user?.id) && (
-                                            <span className="ml-1 flex items-center text-blue-500 text-xs">
-                                              <CheckCircle className="h-3 w-3 mr-1" />
-                                              Author
-                                            </span>
+                                          <div className="flex items-center">
+                                            <h5 className="font-medium text-xs">
+                                              {reply.user?.profile?.firstName ||
+                                                reply.user?.profile?.name ||
+                                                "Anonymous User"}
+                                            </h5>
+                                            {isProjectOwner(reply.user?.id) && (
+                                              <span className="ml-1 flex items-center text-blue-500 text-xs">
+                                                <CheckCircle className="h-3 w-3 mr-1" />
+                                                Author
+                                              </span>
+                                            )}
+                                          </div>
+                                          <span className="text-xs text-muted-foreground ml-2">
+                                            {timeAgo(reply.createdAt)}
+                                          </span>
+                                        </div>
+                                        <p className="text-xs mt-1 mb-1">{reply.content}</p>
+                                        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                                          <button
+                                            className={`flex items-center hover:text-foreground ${reply?.likedByCurrentUser ? "text-blue-500" : ""}`}
+                                            onClick={() => handleCommentLike(reply.id.toString())}
+                                          >
+                                            <ThumbsUp
+                                              className={`h-3 w-3 mr-1 ${reply?.likedByCurrentUser ? "fill-blue-500" : ""}`}
+                                            />
+                                            {reply.likesCount || 0}
+                                          </button>
+                                          {reply.user?.id === userProfileData?.id && (
+                                            <button
+                                              onClick={() => handleDeleteComment(reply.id.toString())}
+                                              className="text-xs text-muted-foreground hover:text-destructive"
+                                            >
+                                              <Trash2 className="h-3 w-3" />
+                                            </button>
                                           )}
                                         </div>
-                                        <span className="text-xs text-muted-foreground ml-2">
-                                          {timeAgo(reply.createdAt)}
-                                        </span>
-                                      </div>
-                                      <p className="text-xs mt-1 mb-1">{reply.content}</p>
-                                      <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                                        <button
-                                          className={`flex items-center hover:text-foreground ${likedComments[reply.id] ? "text-blue-500" : ""}`}
-                                          onClick={() => handleCommentLike(reply.id.toString())}
-                                        >
-                                          <ThumbsUp
-                                            className={`h-3 w-3 mr-1 ${likedComments[reply.id] ? "fill-blue-500" : ""}`}
-                                          />
-                                          {reply.likes || 0}
-                                        </button>
-                                        {reply.user?.id === userProfileData?.id && (
-                                          <button
-                                            onClick={() => handleDeleteComment(reply.id.toString())}
-                                            className="text-xs text-muted-foreground hover:text-destructive"
-                                          >
-                                            <Trash2 className="h-3 w-3" />
-                                          </button>
-                                        )}
                                       </div>
                                     </div>
-                                  </div>
+                                  )
                                 })}
                               </div>
                             )}
