@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation"
 import type React from "react"
 import { useRef, useState, type FormEvent } from "react"
 
-import { ModeToggle } from "@/components/mode-toggle"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -122,16 +121,6 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      {/* Simple header with logo and theme toggle */}
-      <header className="w-full py-4 px-6 flex justify-between items-center">
-        <Link href="/" className="flex items-center">
-          <span className="font-bold text-xl text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-600">
-            DevConnect
-          </span>
-        </Link>
-        <ModeToggle />
-      </header>
-
       <div className="flex-1 flex items-center justify-center p-4">
         <Card className="w-full max-w-md">
           <CardHeader className="space-y-1">

@@ -1,6 +1,5 @@
 "use client"
 
-import { ModeToggle } from "@/components/mode-toggle"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -114,15 +113,7 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      {/* Simple header with logo and theme toggle */}
-      <header className="w-full py-4 px-6 flex justify-between items-center">
-        <Link href="/" className="flex items-center">
-          <span className="font-bold text-xl text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-600">
-            DevConnect
-          </span>
-        </Link>
-        <ModeToggle />
-      </header>
+
 
       <div className="flex-1 flex items-center justify-center p-4">
         <Card className="w-full max-w-md">

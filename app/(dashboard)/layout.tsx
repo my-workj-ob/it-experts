@@ -1,11 +1,15 @@
-import type React from "react"
+"use client"
+
 import Sidebar from "@/components/sidebar"
+import type React from "react"
 
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+
+
   return (
     <>
       <div className="md:flex relative">
