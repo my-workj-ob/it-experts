@@ -88,7 +88,7 @@ export default function LoginPage() {
       })
 
       // Redirect to dashboard
-      router.push("/dashboard")
+      window.location.href = "/dashboard"
     } catch (error: any) {
       console.error("Login error:", error)
 
