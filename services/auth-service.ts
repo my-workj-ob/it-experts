@@ -6,7 +6,10 @@ export const AuthService = {
 	register: async (user: IRegister): Promise<AuthResponse> => {
 		const response = await axiosInstance.post<AuthResponse>(
 			'/auth/register',
-			user
+			user,
+			{
+				withCredentials: true,
+			}
 		);
 
 		// Store tokens in localStorage

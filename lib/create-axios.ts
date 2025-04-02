@@ -1,5 +1,5 @@
 import axios from 'axios';
-
+// ok
 const getApiUrl = () => {
 	if (typeof window !== 'undefined') {
 		const hostname = window.location.hostname;
