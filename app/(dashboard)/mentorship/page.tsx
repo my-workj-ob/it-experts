@@ -1,37 +1,133 @@
 "use client"
 
-import { useState } from "react"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
-import { Separator } from "@/components/ui/separator"
 import { Progress } from "@/components/ui/progress"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Separator } from "@/components/ui/separator"
+import { Switch } from "@/components/ui/switch"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Textarea } from "@/components/ui/textarea"
+import axiosInstance from "@/lib/create-axios"
 import {
-  Search,
-  Filter,
-  Calendar,
-  Clock,
-  Star,
-  MessageSquare,
-  Users,
   Award,
   BookOpen,
   Briefcase,
+  Calendar,
   CheckCircle,
+  Clock,
+  Filter,
   Info,
-  Zap,
+  MessageSquare,
+  Search,
+  Zap
 } from "lucide-react"
 import Link from "next/link"
+import { JSXElementConstructor, Key, ReactElement, ReactNode, ReactPortal, useEffect, useState } from "react"
 
 export default function MentorshipPage() {
   const [activeTab, setActiveTab] = useState("find-mentor")
+  const [formData, setFormData] = useState({
+    name: "",
+    title: "",
+    company: "",
+    skills: [],
+    experienceYears: 0,
+    hourlyRate: 50,
+    expertise: "",
+    bio: "",
+    expectations: "",
+    weeklyAvailability: 10,
+    pricingOption: "Hourly",
+    termsAgreed: false,
+  })
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitSuccess, setSubmitSuccess] = useState(false)
+  const [submitError, setSubmitError] = useState("")
+  const [mentors, setMentors] = useState([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState("")
+
+  // Fetch mentors using axios and lodash
+  useEffect(() => {
+    const fetchMentors = async () => {
+      setLoading(true)
+      setError("")
+
+      try {
+        const response = await axiosInstance.get("/mentors")
+        // Use lodash to process the data
+        const sortedMentors = response.data
+        setMentors(sortedMentors)
+      } catch (err) {
+        console.error("Error fetching mentors:", err)
+        setError("Failed to load mentors. Please try again.")
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchMentors()
+  }, [])
+
+  const handleInputChange = (field: string, value: string | boolean) => {
+    setFormData({
+      ...formData,
+      [field]: value,
+    })
+  }
+
+  const handleSkillsChange = (e: { target: { value: string } }) => {
+    const skillsArray: any = e.target.value.split(',').map((skill: string) => skill.trim());
+
+    setFormData({
+      ...formData,
+      skills: skillsArray,
+    });
+  };
+
+  const handleSubmit = async () => {
+    // Reset states
+    setIsSubmitting(true)
+    setSubmitSuccess(false)
+    setSubmitError("")
+
+    try {
+      // Prepare the data according to the schema
+      const mentorData = {
+        name: formData.name || "John Doe", // Default values if empty
+        title: formData.title || "Senior Developer",
+        company: formData.company || "TechCorp",
+        skills: formData.skills.length > 0 ? formData.skills : ["React", "Node.js", "TypeScript"],
+        experienceYears: Number.parseInt(formData.experienceYears) || 5,
+        hourlyRate: Number.parseInt(formData.hourlyRate) || 50,
+        expertise: formData.expertise || "Frontend Development",
+        bio: formData.bio || "Experienced web developer specializing in modern frontend technologies.",
+        expectations: formData.expectations || "Looking for mentees passionate about JavaScript and UI/UX design.",
+        weeklyAvailability: Number.parseInt(formData.weeklyAvailability) || 10,
+        pricingOption: formData.pricingOption || "Hourly",
+        termsAgreed: formData.termsAgreed || true,
+      }
+
+      // Make the POST request to /mentors endpoint
+      const response = await axiosInstance.post("/mentors", mentorData)
+
+      console.log("Mentor data submitted successfully:", response.data)
+      setSubmitSuccess(true)
+
+      // Optional: Reset form after successful submission
+      // setFormData({...})
+    } catch (error) {
+      console.error("Error submitting mentor data:", error)
+      setSubmitError(error.response?.data?.message || "Failed to submit mentor data. Please try again.")
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
 
   return (
     <div className="container mx-auto space-y-6">
@@ -74,167 +170,95 @@ export default function MentorshipPage() {
             </Button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[
-              {
-                name: "Sarah Johnson",
-                role: "Senior Frontend Developer",
-                company: "TechCorp Inc.",
-                avatar: "/placeholder.svg?height=100&width=100",
-                rating: 4.9,
-                reviews: 28,
-                mentees: 12,
-                experience: "8+ years",
-                skills: ["React", "TypeScript", "UI/UX", "Performance Optimization"],
-                availability: "2-3 hours/week",
-                price: "Free",
-                verified: true,
-              },
-              {
-                name: "Michael Chen",
-                role: "DevOps Engineer",
-                company: "CloudSystems",
-                avatar: "/placeholder.svg?height=100&width=100",
-                rating: 4.8,
-                reviews: 34,
-                mentees: 15,
-                experience: "10+ years",
-                skills: ["AWS", "Docker", "Kubernetes", "CI/CD", "Infrastructure as Code"],
-                availability: "4-5 hours/week",
-                price: "$50/hour",
-                verified: true,
-              },
-              {
-                name: "Emily Rodriguez",
-                role: "Data Scientist",
-                company: "DataInsights",
-                avatar: "/placeholder.svg?height=100&width=100",
-                rating: 4.7,
-                reviews: 22,
-                mentees: 8,
-                experience: "6+ years",
-                skills: ["Python", "Machine Learning", "Data Visualization", "Statistical Analysis"],
-                availability: "3-4 hours/week",
-                price: "$45/hour",
-                verified: true,
-              },
-              {
-                name: "David Kim",
-                role: "Full Stack Developer",
-                company: "WebSolutions",
-                avatar: "/placeholder.svg?height=100&width=100",
-                rating: 4.9,
-                reviews: 41,
-                mentees: 20,
-                experience: "12+ years",
-                skills: ["JavaScript", "Node.js", "React", "MongoDB", "Express"],
-                availability: "5-6 hours/week",
-                price: "$60/hour",
-                verified: true,
-              },
-              {
-                name: "Jessica Patel",
-                role: "UX/UI Designer",
-                company: "DesignStudio",
-                avatar: "/placeholder.svg?height=100&width=100",
-                rating: 4.8,
-                reviews: 19,
-                mentees: 10,
-                experience: "7+ years",
-                skills: ["Figma", "User Research", "Wireframing", "Prototyping", "Design Systems"],
-                availability: "2-3 hours/week",
-                price: "$55/hour",
-                verified: true,
-              },
-              {
-                name: "Robert Wilson",
-                role: "Mobile App Developer",
-                company: "AppWorks",
-                avatar: "/placeholder.svg?height=100&width=100",
-                rating: 4.6,
-                reviews: 15,
-                mentees: 7,
-                experience: "5+ years",
-                skills: ["Flutter", "React Native", "iOS", "Android", "Mobile UI"],
-                availability: "3-4 hours/week",
-                price: "$40/hour",
-                verified: false,
-              },
-            ].map((mentor, index) => (
-              <Card key={index} className="overflow-hidden">
-                <CardHeader className="pb-2">
-                  <div className="flex justify-between items-start">
-                    <div className="flex gap-4">
-                      <Avatar className="h-16 w-16">
-                        <AvatarImage src={mentor.avatar} alt={mentor.name} />
-                        <AvatarFallback>{mentor.name.substring(0, 2)}</AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <CardTitle className="text-lg">{mentor.name}</CardTitle>
-                          {mentor.verified && (
-                            <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                              <CheckCircle className="h-3 w-3 mr-1" />
-                              Verified
+          {loading ? (
+            <div className="text-center py-8">Loading mentors...</div>
+          ) : error ? (
+            <div className="text-center py-8 text-red-500">{error}</div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {mentors.length > 0 ? (
+                mentors.map((mentor) => (
+                  <Card key={mentor.id} className="overflow-hidden">
+                    <CardHeader className="pb-2">
+                      <div className="flex justify-between items-start">
+                        <div className="flex gap-4">
+                          <Avatar className="h-16 w-16">
+                            <AvatarImage src={mentor?.user?.profile?.avatar} alt={mentor?.user?.profile?.firstName} />
+                            <AvatarFallback>{(mentor?.user?.profile?.firstName, 2)}</AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <CardTitle className="text-lg">{mentor?.user?.profile?.firstName}</CardTitle>
+                              {mentor.termsAgreed ? (
+                                <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                                  <CheckCircle className="h-3 w-3 mr-1" />
+                                  Verified
+                                </Badge>
+                              ) : <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
+                                <CheckCircle className="h-3 w-3 mr-1" />
+                                not verified
+                              </Badge>}
+                            </div>
+                            <CardDescription>{mentor.title}</CardDescription>
+                            <CardDescription>{mentor.company}</CardDescription>
+                          </div>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="flex flex-wrap gap-2">
+                        {mentor.skills &&
+                          mentor.skills.map((skill: string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<string | number | bigint | boolean | ReactPortal | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | null | undefined> | null | undefined, i: Key | null | undefined) => (
+                            <Badge key={i} variant="secondary">
+                              {skill}
                             </Badge>
+                          ))}
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2 text-sm">
+                        <div className="flex items-center gap-2">
+                          <Briefcase className="h-4 w-4 text-emerald-500" />
+                          <span>{mentor.experienceYears}+ years</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Clock className="h-4 w-4 text-purple-500" />
+                          <span>{mentor.weeklyAvailability} hours/week</span>
+                        </div>
+                      </div>
+
+                      <div>
+                        <p className="text-sm font-medium mb-2">Expertise</p>
+                        <p className="text-sm">{mentor.expertise}</p>
+                      </div>
+
+                      <div>
+                        <p className="text-sm font-medium mb-2">Bio</p>
+                        <p className="text-sm">{mentor.bio}</p>
+                      </div>
+
+                      <div className="flex justify-between items-center pt-2">
+                        <div className="font-medium">
+                          {mentor.hourlyRate === 0 ? (
+                            <span className="text-green-600">Free</span>
+                          ) : (
+                            <span>${mentor.hourlyRate}/hour</span>
                           )}
                         </div>
-                        <CardDescription>{mentor.role}</CardDescription>
-                        <CardDescription>{mentor.company}</CardDescription>
+                        <Button>Request Mentorship</Button>
                       </div>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex flex-wrap gap-2">
-                    {mentor.skills.map((skill, i) => (
-                      <Badge key={i} variant="secondary">
-                        {skill}
-                      </Badge>
-                    ))}
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2 text-sm">
-                    <div className="flex items-center gap-2">
-                      <Star className="h-4 w-4 text-amber-500" />
-                      <span>
-                        {mentor.rating} ({mentor.reviews} reviews)
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Users className="h-4 w-4 text-indigo-500" />
-                      <span>{mentor.mentees} mentees</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Briefcase className="h-4 w-4 text-emerald-500" />
-                      <span>{mentor.experience}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Clock className="h-4 w-4 text-purple-500" />
-                      <span>{mentor.availability}</span>
-                    </div>
-                  </div>
-
-                  <div className="flex justify-between items-center pt-2">
-                    <div className="font-medium">
-                      {mentor.price === "Free" ? (
-                        <span className="text-green-600">Free</span>
-                      ) : (
-                        <span>{mentor.price}</span>
-                      )}
-                    </div>
-                    <Button>Request Mentorship</Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                    </CardContent>
+                  </Card>
+                ))
+              ) : (
+                <div className="col-span-full text-center py-8">No mentors found</div>
+              )}
+            </div>
+          )}
 
           <div className="flex justify-center mt-8">
             <Button variant="outline">Load More Mentors</Button>
           </div>
         </TabsContent>
-
         <TabsContent value="become-mentor" className="space-y-6">
           <Card>
             <CardHeader>
@@ -242,41 +266,68 @@ export default function MentorshipPage() {
               <CardDescription>Share your expertise and help others grow in their careers</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+
+              {submitError && <div className="bg-red-50 text-red-700 p-4 rounded-md mb-4">{submitError}</div>}
+
+              <div className="space-y-2">
+                <Label htmlFor="mentor-title">Professional Title</Label>
+                <Input
+                  id="mentor-title"
+                  placeholder="Senior Developer"
+                  value={formData.title}
+                  onChange={(e) => handleInputChange("title", e.target.value)}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="mentor-company">Company</Label>
+                <Input
+                  id="mentor-company"
+                  placeholder="TechCorp"
+                  value={formData.company}
+                  onChange={(e) => handleInputChange("company", e.target.value)}
+                />
+              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="mentor-expertise">Areas of Expertise</Label>
-                <Select>
+                <Select onValueChange={(value) => handleInputChange("expertise", value)}>
                   <SelectTrigger id="mentor-expertise">
                     <SelectValue placeholder="Select your primary expertise" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="frontend">Frontend Development</SelectItem>
-                    <SelectItem value="backend">Backend Development</SelectItem>
-                    <SelectItem value="fullstack">Full Stack Development</SelectItem>
-                    <SelectItem value="mobile">Mobile Development</SelectItem>
-                    <SelectItem value="devops">DevOps</SelectItem>
-                    <SelectItem value="data-science">Data Science</SelectItem>
-                    <SelectItem value="ui-ux">UI/UX Design</SelectItem>
-                    <SelectItem value="product-management">Product Management</SelectItem>
+                    <SelectItem value="Frontend Development">Frontend Development</SelectItem>
+                    <SelectItem value="Backend Development">Backend Development</SelectItem>
+                    <SelectItem value="Full Stack Development">Full Stack Development</SelectItem>
+                    <SelectItem value="Mobile Development">Mobile Development</SelectItem>
+                    <SelectItem value="DevOps">DevOps</SelectItem>
+                    <SelectItem value="Data Science">Data Science</SelectItem>
+                    <SelectItem value="UI/UX Design">UI/UX Design</SelectItem>
+                    <SelectItem value="Product Management">Product Management</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="mentor-skills">Skills & Technologies</Label>
-                <Input id="mentor-skills" placeholder="Add skills separated by commas (e.g., React, Node.js, AWS)" />
+                <Input
+                  id="mentor-skills"
+                  placeholder="Add skills separated by commas (e.g., React, Node.js, AWS)"
+                  onChange={handleSkillsChange}
+                />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="mentor-experience">Years of Experience</Label>
-                <Select>
+                <Select onValueChange={(value) => handleInputChange("experienceYears", value)}>
                   <SelectTrigger id="mentor-experience">
                     <SelectValue placeholder="Select years of experience" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="1-3">1-3 years</SelectItem>
-                    <SelectItem value="3-5">3-5 years</SelectItem>
-                    <SelectItem value="5-10">5-10 years</SelectItem>
-                    <SelectItem value="10+">10+ years</SelectItem>
+                    <SelectItem value="1">1-3 years</SelectItem>
+                    <SelectItem value="5">3-5 years</SelectItem>
+                    <SelectItem value="8">5-10 years</SelectItem>
+                    <SelectItem value="12">10+ years</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -287,6 +338,8 @@ export default function MentorshipPage() {
                   id="mentor-bio"
                   placeholder="Tell potential mentees about yourself, your experience, and your mentoring style"
                   rows={4}
+                  value={formData.bio}
+                  onChange={(e) => handleInputChange("bio", e.target.value)}
                 />
               </div>
 
@@ -296,45 +349,55 @@ export default function MentorshipPage() {
                   id="mentor-expectations"
                   placeholder="Describe what mentees can expect from your mentorship"
                   rows={3}
+                  value={formData.expectations}
+                  onChange={(e) => handleInputChange("expectations", e.target.value)}
                 />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="mentor-availability">Weekly Availability</Label>
-                  <Select>
+                  <Label htmlFor="mentor-availability">Weekly Availability (hours)</Label>
+                  <Select onValueChange={(value) => handleInputChange("weeklyAvailability", value)}>
                     <SelectTrigger id="mentor-availability">
                       <SelectValue placeholder="Select hours per week" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="1-2">1-2 hours</SelectItem>
-                      <SelectItem value="2-4">2-4 hours</SelectItem>
-                      <SelectItem value="4-6">4-6 hours</SelectItem>
-                      <SelectItem value="6+">6+ hours</SelectItem>
+                      <SelectItem value="2">1-2 hours</SelectItem>
+                      <SelectItem value="4">2-4 hours</SelectItem>
+                      <SelectItem value="6">4-6 hours</SelectItem>
+                      <SelectItem value="10">6+ hours</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="mentor-price">Pricing</Label>
-                  <Select>
+                  <Select
+                    onValueChange={(value) => {
+                      handleInputChange("pricingOption", "Hourly")
+                      handleInputChange("hourlyRate", value)
+                    }}
+                  >
                     <SelectTrigger id="mentor-price">
                       <SelectValue placeholder="Select pricing option" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="free">Free</SelectItem>
+                      <SelectItem value="0">Free</SelectItem>
                       <SelectItem value="25">$25/hour</SelectItem>
                       <SelectItem value="50">$50/hour</SelectItem>
                       <SelectItem value="75">$75/hour</SelectItem>
                       <SelectItem value="100">$100/hour</SelectItem>
-                      <SelectItem value="custom">Custom pricing</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
 
               <div className="flex items-center space-x-2">
-                <Switch id="mentor-terms" />
+                <Switch
+                  id="mentor-terms"
+                  checked={formData.termsAgreed}
+                  onCheckedChange={(checked) => handleInputChange("termsAgreed", checked)}
+                />
                 <Label htmlFor="mentor-terms">
                   I agree to the{" "}
                   <Link href="/terms" className="text-primary hover:underline">
@@ -345,9 +408,18 @@ export default function MentorshipPage() {
             </CardContent>
             <CardFooter className="flex justify-end gap-2">
               <Button variant="outline">Save as Draft</Button>
-              <Button>Submit Application</Button>
+              <Button onClick={handleSubmit} disabled={isSubmitting || !formData.termsAgreed}>
+                {isSubmitting ? "Submitting..." : "Submit Application"}
+              </Button>
             </CardFooter>
           </Card>
+          {submitSuccess && (
+            <div className="bg-green-50 text-green-700 p-4 rounded-md mb-4 flex items-center">
+              <CheckCircle className="h-5 w-5 mr-2" />
+              Your mentor application has been submitted successfully!
+            </div>
+          )}
+
         </TabsContent>
 
         <TabsContent value="my-mentorships" className="space-y-6">

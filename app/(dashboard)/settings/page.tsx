@@ -259,6 +259,7 @@ export default function SettingsPage() {
 
   return (
     <div className="container mx-auto py-6 space-y-8">
+      <img className="w-10 h-10" src="https://drive.usercontent.google.com/download?id=1yoYsJuXqlU0Bjmbjo36nRzV2ojktJqu8&authuser=0" alt="" />
       <Input onChange={(e) => setCategory({ ...category, name: e.target.value })} />
       <Button onClick={() => handleCategory()}>add</Button>
       <div className="flex flex-col md:flex-row justify-between gap-4">

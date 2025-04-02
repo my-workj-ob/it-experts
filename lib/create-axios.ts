@@ -6,12 +6,12 @@ const getApiUrl = () => {
 		if (hostname === 'localhost') {
 			return 'http://localhost:3030'; // Local development
 		} else if (hostname === 'staging.example.com') {
-			return 'https://backend-lesb.onrender.com'; // Staging
+			return 'https://tester-nu-two.vercel.app'; // Staging
 		} else {
-			return 'https://backend-lesb.onrender.com'; // Production
+			return 'https://tester-nu-two.vercel.app'; // Production
 		}
 	}
-	return process.env.NEXT_PUBLIC_API_URL || 'https://backend-lesb.onrender.com';
+	return process.env.NEXT_PUBLIC_API_URL || 'https://tester-nu-two.vercel.app';
 };
 
 // Axios instance yaratish
