@@ -104,7 +104,7 @@ export const ProfileService = {
 
 	uploadFile: async (file: File) => {
 		const formData = new FormData();
-		formData.append('file', file);
+		formData.append('file', file); // Faylni FormData orqali yuboring
 
 		const response = await axiosInstance.post('/file/upload', formData, {
 			headers: { 'Content-Type': 'multipart/form-data' },
@@ -115,10 +115,16 @@ export const ProfileService = {
 	},
 
 	updateAvatar: async (profileId: number, fileUrl: string) => {
+		console.log(fileUrl);
+
 		const response = await axiosInstance.patch(
 			`/profile/avatar/${profileId}`,
 			{ avatar: fileUrl }, // <-- JSON obyekt ichida avatar URL yuborish
+
 			{
+				headers: {
+					'Content-Type': 'application/json', // Fayl yubormasdan faqat JSON yuboramiz
+				},
 				withCredentials: true,
 			}
 		);

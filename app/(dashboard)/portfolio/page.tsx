@@ -94,7 +94,7 @@ export default function PortfolioPage() {
                 <Card key={index} className="overflow-hidden group">
                   <div className="relative">
                     <img
-                      src={get(JSON.parse(get(project, "imageUrl")), "fileUrl") || "/placeholder.svg"}
+                      src={get(project, "imageUrl") || "/placeholder.svg"}
                       alt={get(project, "title")}
                       className="w-full h-48 object-cover transition-transform group-hover:scale-105"
                     />

@@ -504,12 +504,7 @@ export default function DiscoverProjectDetailPage() {
           <Card>
             <CardContent className="p-0">
               <img
-                src={
-                  get(
-                    get(project, "imageUrl") ? JSON.parse(project.imageUrl) : { fileUrl: "/placeholder.svg" },
-                    "fileUrl",
-                  ) || "/placeholder.svg"
-                }
+                src={get(project, "imageUrl") || "/placeholder.svg"}
                 alt={get(project, "title", "Project Image")}
                 className="w-full h-[400px] object-cover rounded-t-lg"
               />

@@ -367,10 +367,7 @@ export default function DiscoverPage() {
                 >
                   <div className="relative">
                     <img
-                      src={
-                        get(JSON.parse(project.imageUrl || '{"fileUrl": "/placeholder.svg"}'), "fileUrl") ||
-                        "/placeholder.svg"
-                      }
+                      src={get(project, "imageUrl") || "/placeholder.svg"}
                       alt={project.title}
                       className="w-full h-48 object-cover transition-transform group-hover:scale-105"
                     />
@@ -378,10 +375,7 @@ export default function DiscoverPage() {
                   <CardHeader>
                     <div className="flex items-center gap-2 mb-2">
                       <img
-                        src={
-                          get(JSON.parse(project.imageUrl || '{"fileUrl": "/placeholder.svg"}'), "fileUrl") ||
-                          "/placeholder.svg"
-                        }
+                        src={get(project, "imageUrl") || "/placeholder.svg"}
                         alt={project.profile?.name || "Author"}
                         className="h-6 w-6 rounded-full"
                       />

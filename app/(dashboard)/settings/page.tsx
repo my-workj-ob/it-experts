@@ -220,9 +220,11 @@ export default function SettingsPage() {
     const file = event.target.files?.[0];
     if (!file) return;
 
+
     try {
       const uploadedFile = await uploadFile(file);
-      const response = await updateAvatar(userProfileData.id, uploadedFile.fileUrl);
+      const response = await updateAvatar(userProfileData.id, uploadedFile.url);
+
       setAvatarUrl(response.avatar);
       refetch()
       toast({
