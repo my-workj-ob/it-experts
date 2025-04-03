@@ -89,8 +89,10 @@ export default function ChatPage() {
     }
 
 
+
+
     // Connect to the Socket.io server
-    const socket = io("http://localhost:3030", {
+    const socket = io("https://tester-nu-two.vercel.app", {
       transports: ["websocket", "polling"],
       withCredentials: true,
       forceNew: true, // Force a new connection
