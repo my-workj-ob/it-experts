@@ -17,7 +17,7 @@ import useAuthStatus from "@/hooks/auth/use-auth-status"
 import useAuth from "@/hooks/auth/useAuth"
 import useProfile from "@/hooks/profile/use-profile"
 import { get } from "lodash"
-import { Bell, Search, Video, Zap } from "lucide-react"
+import { Bell, Search, Zap } from "lucide-react"
 import Link from "next/link"
 
 export default function Navbar() {
@@ -104,16 +104,16 @@ export default function Navbar() {
                   <DropdownMenuItem asChild>
                     <Link href="/jobs">Jobs</Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
+                  {/* <DropdownMenuItem asChild>
                     <Link href="/integrations">Integrations</Link>
-                  </DropdownMenuItem>
+                  </DropdownMenuItem> */}
                   <DropdownMenuItem asChild>
                     <Link href="/settings">Settings</Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
+                  {/* <DropdownMenuItem asChild>
                     <Link href="/learn">Learn</Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
+                  </DropdownMenuItem> */}
+                  {/* <DropdownMenuItem asChild>
                     <Link href="/subscription">
                       <div className="flex items-center">
                         Subscription
@@ -125,15 +125,15 @@ export default function Navbar() {
                         </Badge>
                       </div>
                     </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
+                  </DropdownMenuItem> */}
+                  {/* <DropdownMenuItem asChild>
                     <Link href="/videos">
                       <div className="flex items-center">
                         <Video className="h-4 w-4 mr-2" />
                         Videos
                       </div>
                     </Link>
-                  </DropdownMenuItem>
+                  </DropdownMenuItem> */}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem className="text-red-500 focus:text-red-500" onClick={logout}>
                     Logout

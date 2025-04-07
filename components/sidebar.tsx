@@ -15,18 +15,15 @@ import {
   Code,
   FileCode,
   FolderKanban,
-  Gem,
   Home,
   Layers,
   LinkIcon,
-  MessageCircle,
   MessageSquare,
-  Search,
   Settings,
   Sparkles,
   Trophy,
   Users,
-  Video,
+  Video
 } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
@@ -74,13 +71,13 @@ export default function Sidebar() {
       active: pathname?.includes("/events"),
       premium: false,
     },
-    {
-      label: "Find a Team",
-      icon: Search,
-      href: "/find-team",
-      active: pathname === "/find-team",
-      premium: false,
-    },
+    // {
+    //   label: "Find a Team",
+    //   icon: Search,
+    //   href: "/find-team",
+    //   active: pathname === "/find-team",
+    //   premium: false,
+    // },
     {
       label: "Project Showcase",
       icon: Layers,
@@ -88,13 +85,13 @@ export default function Sidebar() {
       active: pathname?.includes("/project-showcase"),
       premium: false,
     },
-    {
-      label: "Videos",
-      icon: Video,
-      href: "/videos",
-      active: pathname?.includes("/videos"),
-      premium: false,
-    },
+    // {
+    //   label: "Videos",
+    //   icon: Video,
+    //   href: "/videos",
+    //   active: pathname?.includes("/videos"),
+    //   premium: false,
+    // },
     {
       label: "Statistics",
       icon: BarChart2,
@@ -102,13 +99,7 @@ export default function Sidebar() {
       active: pathname === "/statistics",
       premium: false,
     },
-    {
-      label: "Feedback",
-      icon: MessageCircle,
-      href: "/feedback",
-      active: pathname === "/feedback",
-      premium: false,
-    },
+
     {
       label: "Settings",
       icon: Settings,
@@ -283,7 +274,7 @@ export default function Sidebar() {
           )}
 
           {/* Premium Section Header - Smaller as requested */}
-          <div
+          {/* <div
             className="flex items-center justify-between px-3 py-2 mt-3 cursor-pointer hover:bg-gray-800/50 rounded-md"
             onClick={() => toggleSection("premium")}
           >
@@ -293,10 +284,10 @@ export default function Sidebar() {
             ) : (
               <ChevronRight className="h-4 w-4 text-purple-400" />
             )}
-          </div>
+          </div> */}
 
           {/* Premium Routes - Smaller with icon instead of PRO text */}
-          {expandedSections.premium && (
+          {/* expandedSections.premium && (
             <div className="grid gap-1 ml-1 mt-1">
               {premiumRoutes.map((route) => (
                 <Link key={route.href} href={route.href} passHref>
@@ -310,7 +301,7 @@ export default function Sidebar() {
                 </Link>
               ))}
             </div>
-          )}
+          )*/}
         </nav>
       </ScrollArea>
     </div>

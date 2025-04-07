@@ -201,7 +201,7 @@ export default function DiscoverPage() {
   const resetFilters = async () => {
     setSearchQuery("")
     setCategoryFilter("all")
-    setSortBy("trending")
+    setSortBy("")
     setMinLikes(0)
     setMinViews(0)
     setShowOwnProducts(false)

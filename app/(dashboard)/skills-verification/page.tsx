@@ -9,10 +9,9 @@ import { Input } from "@/components/ui/input"
 import { Progress } from "@/components/ui/progress"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import useProfile from "@/hooks/profile/use-profile"
-import { skillService } from "@/services/skill-service"
-import { Skill } from "@/types/skills-types"
+import { assessmentService } from "@/services/assessment-service"
+import { skillService, type Skill } from "@/services/skill-service"
 import { useQuery } from "@tanstack/react-query"
-import { get } from "lodash"
 import {
   AlertTriangle,
   Award,
@@ -33,58 +32,79 @@ import {
   Upload,
   Zap,
 } from "lucide-react"
+import Link from "next/link"
 import { useState } from "react"
 
 export default function SkillsVerificationPage() {
-  const [activeTab, setActiveTab] = useState<string>("my-skills");
-  const [isAddSkillModalOpen, setIsAddSkillModalOpen] = useState<boolean>(false);
-  const [searchQuery, setSearchQuery] = useState<string>("");
-
-  const { userProfileData } = useProfile();
+  const [activeTab, setActiveTab] = useState("my-skills")
+  const [isAddSkillModalOpen, setIsAddSkillModalOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState("")
+  const { userProfileData } = useProfile()
 
   // Fetch skills data using React Query
-  const { data: skill = [], isLoading, refetch } = useQuery({
+  const {
+    data: skills = [],
+    isLoading: isLoadingSkills,
+    refetch,
+  } = useQuery({
     queryKey: ["skills_by_profile_id", userProfileData?.id],
-    queryFn: async () => skillService.getSkillsProfileById(userProfileData?.id, false),
+    queryFn: async () => await skillService.getSkillsProfileById(userProfileData?.id, false),
     enabled: !!userProfileData?.id,
-  });
+  })
+  console.log(skills);
 
-  // Ensure `skills` has the correct structure
-  const skills: Skill[] = Array.isArray(get(skill, "data", [])) ? get(skill, "data", []) : [];
 
-  // Filter skills based on the search query
-  const filteredSkills = skills.filter((skill) => skill.name.toLowerCase().includes(searchQuery.toLowerCase()));
+
+  // Fetch completed assessments
+  const { data: completedAssessments = [], isLoading: isLoadingAssessments } = useQuery({
+    queryKey: ["assessments", userProfileData?.id],
+    queryFn: async () => {
+      if (!userProfileData?.id) return []
+      return await assessmentService.getAssessmentById(userProfileData.id)
+    },
+    enabled: !!userProfileData?.id,
+  })
+
+
+
+
+
+
+  // Filter skills based on search query
+  const filteredSkills = skills.filter((skill) => skill?.title?.toLowerCase().includes(searchQuery.toLowerCase()))
 
   // Group skills by category
-  const groupedSkills = filteredSkills.reduce<Record<string, Skill[]>>(
+  const groupedSkills = filteredSkills.reduce(
     (acc, skill) => {
-      const categoryName = skill.category?.name || "Uncategorized";
+      const categoryName = skill.category?.name || "Uncategorized"
       if (!acc[categoryName]) {
-        acc[categoryName] = [];
+        acc[categoryName] = []
       }
-      acc[categoryName].push(skill);
-      return acc;
+      acc[categoryName].push(skill)
+      return acc
     },
-    {}
-  );
+    {} as Record<string, Skill[]>,
+  )
 
   // Calculate verification stats
-  const verifiedSkillsCount = skills.filter((skill) => skill.isVerified).length;
-  const totalSkillsCount = skills.length;
-  const verificationPercentage = totalSkillsCount > 0 ? Math.round((verifiedSkillsCount / totalSkillsCount) * 100) : 0;
+  const verifiedSkillsCount = skills.filter((skill) => skill.isVerified).length
+  const totalSkillsCount = skills.length
+  const verificationPercentage = totalSkillsCount > 0 ? Math.round((verifiedSkillsCount / totalSkillsCount) * 100) : 0
 
   // Get total endorsements
-  const totalEndorsements = skills.reduce((sum, skill) => sum + skill.endorsements, 0);
+  const totalEndorsements = skills.reduce((sum, skill) => sum + skill.endorsements, 0)
 
   // Toggle skill visibility
-  const toggleSkillVisibility = async (profileId: number, isPublic: boolean) => {
+  const toggleSkillVisibility = async (skillId: number, isPublic: boolean) => {
     try {
-      await skillService.getSkillsProfileById(profileId, isPublic);
-      refetch();
+      await skillService.updateSkillVisibility(skillId, isPublic)
+      refetch()
     } catch (error) {
-      console.error("Error updating skill visibility:", error);
+      console.error("Error updating skill visibility:", error)
     }
-  };
+  }
+
+  const isLoading = isLoadingSkills || isLoadingAssessments
 
   return (
     <div className="container mx-auto space-y-6">
@@ -98,9 +118,11 @@ export default function SkillsVerificationPage() {
             <BookOpen className="h-4 w-4 mr-2" />
             Learning Resources
           </Button>
-          <Button>
-            <Award className="h-4 w-4 mr-2" />
-            Take Assessment
+          <Button asChild>
+            <Link href="/skills-verification/assessments">
+              <Award className="h-4 w-4 mr-2" />
+              Take Assessment
+            </Link>
           </Button>
         </div>
       </div>
@@ -114,6 +136,7 @@ export default function SkillsVerificationPage() {
         </TabsList>
 
         <TabsContent value="my-skills" className="space-y-6">
+          {/* My Skills content remains the same */}
           <div className="flex flex-col md:flex-row gap-4 mb-6">
             <div className="relative flex-1">
               <Input
@@ -169,40 +192,61 @@ export default function SkillsVerificationPage() {
                   </CardHeader>
                   <CardContent className="space-y-4">
                     {categorySkills.length > 0 ? (
-                      categorySkills.map((skill) => (
-                        <div key={skill.id} className="space-y-2">
-                          <div className="flex justify-between items-center">
-                            <div className="flex items-center gap-2">
-                              <span className="font-medium">{skill.name}</span>
-                              {skill.isVerified && (
-                                <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                                  <CheckCircle className="h-3 w-3 mr-1" />
-                                  Verified
-                                </Badge>
-                              )}
-                              {skill.ownSkill && (
-                                <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                                  Owner
-                                </Badge>
-                              )}
+                      categorySkills.map((skill) => {
+                        // Check if this skill has been verified through an assessment
+                        const relatedAssessment = completedAssessments.find(
+                          (a) =>
+                            a.title.toLowerCase().includes(skill.title.toLowerCase()) ||
+                            skill.title.toLowerCase().includes(a.title.split(" ")[0].toLowerCase()),
+                        )
+
+                        // If there's a related assessment with a score >= 70, mark as verified
+                        const isVerifiedByAssessment = relatedAssessment && relatedAssessment.score >= 70
+
+                        return (
+                          <div key={skill.id} className="space-y-2">
+                            <div className="flex justify-between items-center">
+                              <div className="flex items-center gap-2">
+                                <span className="font-medium">{skill.title}</span>
+                                {(skill.isVerified || isVerifiedByAssessment) && (
+                                  <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                                    <CheckCircle className="h-3 w-3 mr-1" />
+                                    Verified
+                                  </Badge>
+                                )}
+                                {skill.ownSkill && (
+                                  <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                                    Owner
+                                  </Badge>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <button
+                                  className="text-muted-foreground hover:text-foreground"
+                                  onClick={() => toggleSkillVisibility(skill.id, !skill.isPublic)}
+                                  title={skill.isPublic ? "Make private" : "Make public"}
+                                >
+                                  {skill.isPublic ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                                </button>
+                                <span className="text-sm text-muted-foreground">{skill.endorsements} endorsements</span>
+                              </div>
                             </div>
                             <div className="flex items-center gap-2">
-                              <button
-                                className="text-muted-foreground hover:text-foreground"
-                                onClick={() => toggleSkillVisibility(userProfileData?.id, !skill.isPublic)}
-                                title={skill.isPublic ? "Make private" : "Make public"}
-                              >
-                                {skill.isPublic ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
-                              </button>
-                              <span className="text-sm text-muted-foreground">{skill.endorsements} endorsements</span>
+                              <Progress value={skill.percentage} className="h-2 flex-1" />
+                              <span className="text-sm font-medium">{skill.percentage}%</span>
                             </div>
+
+                            {relatedAssessment && (
+                              <div className="text-xs text-muted-foreground flex items-center gap-1">
+                                <Award className="h-3 w-3" />
+                                <span>
+                                  {relatedAssessment.level} level • {relatedAssessment.score}% score
+                                </span>
+                              </div>
+                            )}
                           </div>
-                          <div className="flex items-center gap-2">
-                            <Progress value={skill.percentage} className="h-2 flex-1" />
-                            <span className="text-sm font-medium">{skill.percentage}%</span>
-                          </div>
-                        </div>
-                      ))
+                        )
+                      })
                     ) : (
                       <div className="text-center py-4 text-muted-foreground">
                         No {categoryName.toLowerCase()} added yet
@@ -210,9 +254,11 @@ export default function SkillsVerificationPage() {
                     )}
                   </CardContent>
                   <CardFooter>
-                    <Button variant="outline" className="w-full">
-                      <Shield className="h-4 w-4 mr-2" />
-                      Verify Skills
+                    <Button variant="outline" className="w-full" asChild>
+                      <Link href="/skills-verification/assessments">
+                        <Shield className="h-4 w-4 mr-2" />
+                        Verify Skills
+                      </Link>
                     </Button>
                   </CardFooter>
                 </Card>
@@ -317,16 +363,18 @@ export default function SkillsVerificationPage() {
               </div>
             </CardContent>
             <CardFooter>
-              <Button className="w-full">
-                <Shield className="h-4 w-4 mr-2" />
-                Verify More Skills
+              <Button className="w-full" asChild>
+                <Link href="/skills-verification/assessments">
+                  <Shield className="h-4 w-4 mr-2" />
+                  Verify More Skills
+                </Link>
               </Button>
             </CardFooter>
           </Card>
         </TabsContent>
 
         <TabsContent value="assessments" className="space-y-6">
-          {/* Assessment content remains the same */}
+          {/* Assessment content with links to the new assessment pages */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Card>
               <CardHeader>
@@ -336,63 +384,70 @@ export default function SkillsVerificationPage() {
               <CardContent className="space-y-4">
                 {[
                   {
-                    name: "JavaScript Proficiency",
+                    title: "JavaScript Proficiency",
                     description: "Test your knowledge of JavaScript fundamentals, ES6+, and advanced concepts.",
                     duration: "45 minutes",
                     questions: 30,
                     difficulty: "Intermediate",
                   },
                   {
-                    name: "React Development",
+                    title: "React Development",
                     description: "Demonstrate your skills in building React applications, hooks, and state management.",
                     duration: "60 minutes",
                     questions: 35,
                     difficulty: "Advanced",
                   },
                   {
-                    name: "Node.js Backend",
+                    title: "Node.js Backend",
                     description: "Prove your ability to build server-side applications with Node.js and Express.",
                     duration: "50 minutes",
                     questions: 25,
                     difficulty: "Intermediate",
                   },
                   {
-                    name: "Data Structures & Algorithms",
+                    title: "Data Structures & Algorithms",
                     description: "Solve coding challenges to demonstrate your problem-solving abilities.",
                     duration: "90 minutes",
                     questions: 15,
                     difficulty: "Advanced",
                   },
-                ].map((assessment, index) => (
-                  <div key={index} className="border rounded-lg p-4">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h3 className="font-medium">{assessment.name}</h3>
-                        <p className="text-sm text-muted-foreground mt-1">{assessment.description}</p>
+                ].map((assessment, index) => {
+                  // Check if this assessment has been completed
+                  const isCompleted = completedAssessments.some((a) => a.title === assessment.title)
+
+                  return (
+                    <div key={index} className="border rounded-lg p-4">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h3 className="font-medium">{assessment.title}</h3>
+                          <p className="text-sm text-muted-foreground mt-1">{assessment.description}</p>
+                        </div>
+                        <Badge variant="outline">{assessment.difficulty}</Badge>
                       </div>
-                      <Badge variant="outline">{assessment.difficulty}</Badge>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2 mt-3 text-sm">
-                      <div className="flex items-center gap-2">
-                        <Clock className="h-4 w-4 text-muted-foreground" />
-                        <span>{assessment.duration}</span>
+                      <div className="grid grid-cols-2 gap-2 mt-3 text-sm">
+                        <div className="flex items-center gap-2">
+                          <Clock className="h-4 w-4 text-muted-foreground" />
+                          <span>{assessment.duration}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <HelpCircle className="h-4 w-4 text-muted-foreground" />
+                          <span>{assessment.questions} questions</span>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <HelpCircle className="h-4 w-4 text-muted-foreground" />
-                        <span>{assessment.questions} questions</span>
+                      <div className="mt-4">
+                        <Button size="sm" className="w-full" asChild>
+                          <Link href={`/skills-verification/assessments/${encodeURIComponent(assessment.title)}`}>
+                            {isCompleted ? "Retake Assessment" : "Take Assessment"}
+                          </Link>
+                        </Button>
                       </div>
                     </div>
-                    <div className="mt-4">
-                      <Button size="sm" className="w-full">
-                        Take Assessment
-                      </Button>
-                    </div>
-                  </div>
-                ))}
+                  )
+                })}
               </CardContent>
               <CardFooter>
-                <Button variant="outline" className="w-full">
-                  View All Assessments
+                <Button variant="outline" className="w-full" asChild>
+                  <Link href="/skills-verification/assessments">View All Assessments</Link>
                 </Button>
               </CardFooter>
             </Card>
@@ -403,62 +458,56 @@ export default function SkillsVerificationPage() {
                 <CardDescription>Your assessment results and certificates</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {[
-                  {
-                    name: "HTML & CSS Fundamentals",
-                    score: 92,
-                    date: "March 15, 2025",
-                    badge: "Expert",
-                    certificate: true,
-                  },
-                  {
-                    name: "JavaScript Basics",
-                    score: 88,
-                    date: "February 20, 2025",
-                    badge: "Advanced",
-                    certificate: true,
-                  },
-                  {
-                    name: "Git & Version Control",
-                    score: 95,
-                    date: "January 10, 2025",
-                    badge: "Expert",
-                    certificate: true,
-                  },
-                ].map((assessment, index) => (
-                  <div key={index} className="border rounded-lg p-4">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h3 className="font-medium">{assessment.name}</h3>
-                        <p className="text-sm text-muted-foreground mt-1">Completed on {assessment.date}</p>
-                      </div>
-                      <Badge className="bg-green-100 text-green-800 hover:bg-green-100 border-green-200">
-                        {assessment.score}%
-                      </Badge>
-                    </div>
-                    <div className="flex items-center justify-between mt-3">
-                      <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                        <Award className="h-3 w-3 mr-1" />
-                        {assessment.badge}
-                      </Badge>
-                      <div className="flex gap-2">
-                        <Button variant="outline" size="sm">
-                          View Details
-                        </Button>
-                        {assessment.certificate && (
-                          <Button size="sm">
-                            <FileCheck className="h-4 w-4 mr-2" />
-                            Certificate
-                          </Button>
-                        )}
-                      </div>
-                    </div>
+                {isLoading ? (
+                  <div className="flex justify-center py-4">
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
                   </div>
-                ))}
+                ) : completedAssessments.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    You haven't completed any assessments yet.
+                  </div>
+                ) : (
+                  completedAssessments.map((assessment, index) => (
+                    <div key={index} className="border rounded-lg p-4">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h3 className="font-medium">{assessment.title}</h3>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            Completed on {new Date(assessment.completionDate).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <Badge className="bg-green-100 text-green-800 hover:bg-green-100 border-green-200">
+                          {assessment.score}%
+                        </Badge>
+                      </div>
+                      <div className="flex items-center justify-between mt-3">
+                        <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                          <Award className="h-3 w-3 mr-1" />
+                          {assessment.level}
+                        </Badge>
+                        <div className="flex gap-2">
+                          <Button variant="outline" size="sm" asChild>
+                            <Link href={`/skills-verification/assessments/${encodeURIComponent(assessment.title)}`}>
+                              Retake
+                            </Link>
+                          </Button>
+                          {assessment.certificateUrl && (
+                            <Button size="sm" asChild>
+                              <a href={assessment.certificateUrl} target="_blank" rel="noopener noreferrer">
+                                <FileCheck className="h-4 w-4 mr-2" />
+                                Certificate
+                              </a>
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
               </CardContent>
               <CardFooter>
-                <Button variant="outline" className="w-full">
-                  View All Results
+                <Button variant="outline" className="w-full" asChild>
+                  <Link href="/skills-verification/assessments">View All Results</Link>
                 </Button>
               </CardFooter>
             </Card>
@@ -544,67 +593,65 @@ export default function SkillsVerificationPage() {
                 <CardDescription>Certifications you've earned and uploaded</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {[
-                  {
-                    name: "AWS Certified Solutions Architect",
-                    issuer: "Amazon Web Services",
-                    date: "January 2025",
-                    expiry: "January 2028",
-                    verified: true,
-                    logo: "/placeholder.svg?height=40&width=40",
-                  },
-                  {
-                    name: "Professional Scrum Master I",
-                    issuer: "Scrum.org",
-                    date: "March 2024",
-                    expiry: "No Expiration",
-                    verified: true,
-                    logo: "/placeholder.svg?height=40&width=40",
-                  },
-                  {
-                    name: "Google Professional Cloud Developer",
-                    issuer: "Google Cloud",
-                    date: "November 2024",
-                    expiry: "November 2026",
-                    verified: true,
-                    logo: "/placeholder.svg?height=40&width=40",
-                  },
-                ].map((cert, index) => (
-                  <div key={index} className="border rounded-lg p-4">
-                    <div className="flex gap-3">
-                      <img src={cert.logo || "/placeholder.svg"} alt={cert.issuer} className="h-12 w-12 rounded" />
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-medium">{cert.name}</h3>
-                          {cert.verified && (
-                            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                              <CheckCircle className="h-3 w-3 mr-1" />
-                              Verified
-                            </Badge>
-                          )}
+                {isLoading ? (
+                  <div className="flex justify-center py-4">
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+                  </div>
+                ) : completedAssessments.filter((a) => a.score >= 70).length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    You haven't earned any certifications yet.
+                  </div>
+                ) : (
+                  completedAssessments
+                    .filter((a) => a.score >= 70)
+                    .map((cert, index) => (
+                      <div key={index} className="border rounded-lg p-4">
+                        <div className="flex gap-3">
+                          <div className="h-12 w-12 rounded bg-primary/10 flex items-center justify-center">
+                            <Award className="h-6 w-6 text-primary" />
+                          </div>
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              <h3 className="font-medium">{cert.title}</h3>
+                              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                                <CheckCircle className="h-3 w-3 mr-1" />
+                                Verified
+                              </Badge>
+                            </div>
+                            <p className="text-sm text-muted-foreground">Issued by IT Networking Platform</p>
+                            <div className="flex gap-4 mt-1 text-sm">
+                              <span>Issued: {new Date(cert.completionDate).toLocaleDateString()}</span>
+                              <span>
+                                Expires:{" "}
+                                {new Date(
+                                  new Date(cert.completionDate).setFullYear(
+                                    new Date(cert.completionDate).getFullYear() + 2,
+                                  ),
+                                ).toLocaleDateString()}
+                              </span>
+                            </div>
+                          </div>
                         </div>
-                        <p className="text-sm text-muted-foreground">Issued by {cert.issuer}</p>
-                        <div className="flex gap-4 mt-1 text-sm">
-                          <span>Issued: {cert.date}</span>
-                          <span>Expires: {cert.expiry}</span>
+                        <div className="flex justify-end gap-2 mt-3">
+                          <Button variant="outline" size="sm" asChild>
+                            <Link href={`/skills-verification/assessments/${encodeURIComponent(cert.title)}`}>
+                              View
+                            </Link>
+                          </Button>
+                          <Button variant="outline" size="sm">
+                            Share
+                          </Button>
                         </div>
                       </div>
-                    </div>
-                    <div className="flex justify-end gap-2 mt-3">
-                      <Button variant="outline" size="sm">
-                        View
-                      </Button>
-                      <Button variant="outline" size="sm">
-                        Share
-                      </Button>
-                    </div>
-                  </div>
-                ))}
+                    ))
+                )}
               </CardContent>
               <CardFooter>
-                <Button variant="outline" className="w-full">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add More Certifications
+                <Button variant="outline" className="w-full" asChild>
+                  <Link href="/skills-verification/assessments">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Earn More Certifications
+                  </Link>
                 </Button>
               </CardFooter>
             </Card>
@@ -645,7 +692,7 @@ export default function SkillsVerificationPage() {
                     <div className="flex gap-3">
                       <img src={cert.logo || "/placeholder.svg"} alt={cert.issuer} className="h-12 w-12 rounded" />
                       <div className="flex-1">
-                        <h3 className="font-medium">{cert.name}</h3>
+                        <h3 className="font-medium">{cert.title}</h3>
                         <p className="text-sm text-muted-foreground">Issued by {cert.issuer}</p>
                         <div className="flex flex-wrap gap-2 mt-2">
                           <Badge variant="secondary">{cert.level}</Badge>
@@ -706,6 +753,7 @@ export default function SkillsVerificationPage() {
         </TabsContent>
 
         <TabsContent value="endorsements" className="space-y-6">
+          {/* Endorsements content remains the same */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <Card>
               <CardHeader>

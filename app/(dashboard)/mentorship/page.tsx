@@ -1,5 +1,6 @@
 "use client"
 
+import { MentorshipRequestModal } from "@/components/mentor-ship-request-moda"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -12,7 +13,9 @@ import { Separator } from "@/components/ui/separator"
 import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
+import useProfile from "@/hooks/profile/use-profile"
 import axiosInstance from "@/lib/create-axios"
+import { get } from "lodash"
 import {
   Award,
   BookOpen,
@@ -24,19 +27,26 @@ import {
   Info,
   MessageSquare,
   Search,
-  Zap
+  Zap,
 } from "lucide-react"
 import Link from "next/link"
-import { JSXElementConstructor, Key, ReactElement, ReactNode, ReactPortal, useEffect, useState } from "react"
+import {
+  type JSXElementConstructor,
+  type Key,
+  type ReactElement,
+  type ReactNode,
+  type ReactPortal,
+  useEffect, useState
+} from "react"
 
 export default function MentorshipPage() {
   const [activeTab, setActiveTab] = useState("find-mentor")
+  const { userProfileData } = useProfile()
   const [formData, setFormData] = useState({
-    name: "",
     title: "",
     company: "",
     skills: [],
-    experienceYears: 0,
+    experienceYears: 5,
     hourlyRate: 50,
     expertise: "",
     bio: "",
@@ -44,6 +54,7 @@ export default function MentorshipPage() {
     weeklyAvailability: 10,
     pricingOption: "Hourly",
     termsAgreed: false,
+    userId: get(userProfileData, 'id'), // Assuming current user ID is 1
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitSuccess, setSubmitSuccess] = useState(false)
@@ -52,7 +63,11 @@ export default function MentorshipPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
 
-  // Fetch mentors using axios and lodash
+  // State for mentorship request modal
+  const [requestModalOpen, setRequestModalOpen] = useState(false)
+  const [selectedMentor, setSelectedMentor] = useState({ id: 0, name: "" })
+
+  // Fetch mentors using axios
   useEffect(() => {
     const fetchMentors = async () => {
       setLoading(true)
@@ -60,9 +75,7 @@ export default function MentorshipPage() {
 
       try {
         const response = await axiosInstance.get("/mentors")
-        // Use lodash to process the data
-        const sortedMentors = response.data
-        setMentors(sortedMentors)
+        setMentors(response.data)
       } catch (err) {
         console.error("Error fetching mentors:", err)
         setError("Failed to load mentors. Please try again.")
@@ -74,7 +87,7 @@ export default function MentorshipPage() {
     fetchMentors()
   }, [])
 
-  const handleInputChange = (field: string, value: string | boolean) => {
+  const handleInputChange = (field: string, value: string | boolean | number) => {
     setFormData({
       ...formData,
       [field]: value,
@@ -82,13 +95,13 @@ export default function MentorshipPage() {
   }
 
   const handleSkillsChange = (e: { target: { value: string } }) => {
-    const skillsArray: any = e.target.value.split(',').map((skill: string) => skill.trim());
+    const skillsArray = e.target.value.split(",").map((skill: string) => skill.trim())
 
     setFormData({
       ...formData,
       skills: skillsArray,
-    });
-  };
+    })
+  }
 
   const handleSubmit = async () => {
     // Reset states
@@ -97,36 +110,38 @@ export default function MentorshipPage() {
     setSubmitError("")
 
     try {
-      // Prepare the data according to the schema
-      const mentorData = {
-        name: formData.name || "John Doe", // Default values if empty
+      // Use the correct API endpoint as shown in the image
+      await axiosInstance.post("/mentors", {
         title: formData.title || "Senior Developer",
         company: formData.company || "TechCorp",
-        skills: formData.skills.length > 0 ? formData.skills : ["React", "Node.js", "TypeScript"],
-        experienceYears: Number.parseInt(formData.experienceYears) || 5,
-        hourlyRate: Number.parseInt(formData.hourlyRate) || 50,
+        skills: formData.skills.length > 0 ? formData.skills : ["React", "Node.js"],
+        experienceYears: formData.experienceYears,
+        hourlyRate: formData.hourlyRate,
         expertise: formData.expertise || "Frontend Development",
-        bio: formData.bio || "Experienced web developer specializing in modern frontend technologies.",
-        expectations: formData.expectations || "Looking for mentees passionate about JavaScript and UI/UX design.",
-        weeklyAvailability: Number.parseInt(formData.weeklyAvailability) || 10,
-        pricingOption: formData.pricingOption || "Hourly",
-        termsAgreed: formData.termsAgreed || true,
-      }
+        bio: formData.bio || "Senior frontend dev",
+        expectations: formData.expectations || "Looking for JS mentees",
+        weeklyAvailability: formData.weeklyAvailability,
+        pricingOption: formData.pricingOption,
+        termsAgreed: formData.termsAgreed,
+        userId: formData.userId || get(userProfileData, 'id'),
+      })
 
-      // Make the POST request to /mentors endpoint
-      const response = await axiosInstance.post("/mentors", mentorData)
-
-      console.log("Mentor data submitted successfully:", response.data)
       setSubmitSuccess(true)
-
-      // Optional: Reset form after successful submission
-      // setFormData({...})
     } catch (error) {
       console.error("Error submitting mentor data:", error)
       setSubmitError(error.response?.data?.message || "Failed to submit mentor data. Please try again.")
     } finally {
       setIsSubmitting(false)
     }
+  }
+
+  // Function to open the request modal with the selected mentor
+  const openRequestModal = (mentor) => {
+    setSelectedMentor({
+      id: mentor.id,
+      name: mentor?.user?.profile?.firstName || "this mentor",
+    })
+    setRequestModalOpen(true)
   }
 
   return (
@@ -140,6 +155,15 @@ export default function MentorshipPage() {
           <Button variant="outline">
             <Calendar className="h-4 w-4 mr-2" />
             Schedule Session
+          </Button>
+          <Button variant="outline" asChild>
+            <Link href="/mentorship/requests">
+              <MessageSquare className="h-4 w-4 mr-2" />
+              View Requests
+              <Badge variant="secondary" className="ml-2">
+                3
+              </Badge>
+            </Link>
           </Button>
           <Button>
             <Zap className="h-4 w-4 mr-2" />
@@ -189,15 +213,17 @@ export default function MentorshipPage() {
                           <div>
                             <div className="flex items-center gap-2">
                               <CardTitle className="text-lg">{mentor?.user?.profile?.firstName}</CardTitle>
-                              {mentor.termsAgreed ? (
+                              {mentor.verified ? (
                                 <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
                                   <CheckCircle className="h-3 w-3 mr-1" />
                                   Verified
                                 </Badge>
-                              ) : <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
-                                <CheckCircle className="h-3 w-3 mr-1" />
-                                not verified
-                              </Badge>}
+                              ) : (
+                                <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
+                                  <CheckCircle className="h-3 w-3 mr-1" />
+                                  not verified
+                                </Badge>
+                              )}
                             </div>
                             <CardDescription>{mentor.title}</CardDescription>
                             <CardDescription>{mentor.company}</CardDescription>
@@ -208,11 +234,36 @@ export default function MentorshipPage() {
                     <CardContent className="space-y-4">
                       <div className="flex flex-wrap gap-2">
                         {mentor.skills &&
-                          mentor.skills.map((skill: string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<string | number | bigint | boolean | ReactPortal | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | null | undefined> | null | undefined, i: Key | null | undefined) => (
-                            <Badge key={i} variant="secondary">
-                              {skill}
-                            </Badge>
-                          ))}
+                          mentor.skills.map(
+                            (
+                              skill:
+                                | string
+                                | number
+                                | bigint
+                                | boolean
+                                | ReactElement<unknown, string | JSXElementConstructor<any>>
+                                | Iterable<ReactNode>
+                                | ReactPortal
+                                | Promise<
+                                  | string
+                                  | number
+                                  | bigint
+                                  | boolean
+                                  | ReactPortal
+                                  | ReactElement<unknown, string | JSXElementConstructor<any>>
+                                  | Iterable<ReactNode>
+                                  | null
+                                  | undefined
+                                >
+                                | null
+                                | undefined,
+                              i: Key | null | undefined,
+                            ) => (
+                              <Badge key={i} variant="secondary">
+                                {skill}
+                              </Badge>
+                            ),
+                          )}
                       </div>
 
                       <div className="grid grid-cols-2 gap-2 text-sm">
@@ -244,7 +295,7 @@ export default function MentorshipPage() {
                             <span>${mentor.hourlyRate}/hour</span>
                           )}
                         </div>
-                        <Button>Request Mentorship</Button>
+                        <Button onClick={() => openRequestModal(mentor)}>Request Mentorship</Button>
                       </div>
                     </CardContent>
                   </Card>
@@ -259,6 +310,7 @@ export default function MentorshipPage() {
             <Button variant="outline">Load More Mentors</Button>
           </div>
         </TabsContent>
+
         <TabsContent value="become-mentor" className="space-y-6">
           <Card>
             <CardHeader>
@@ -266,7 +318,6 @@ export default function MentorshipPage() {
               <CardDescription>Share your expertise and help others grow in their careers</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-
               {submitError && <div className="bg-red-50 text-red-700 p-4 rounded-md mb-4">{submitError}</div>}
 
               <div className="space-y-2">
@@ -319,7 +370,7 @@ export default function MentorshipPage() {
 
               <div className="space-y-2">
                 <Label htmlFor="mentor-experience">Years of Experience</Label>
-                <Select onValueChange={(value) => handleInputChange("experienceYears", value)}>
+                <Select onValueChange={(value) => handleInputChange("experienceYears", Number.parseInt(value))}>
                   <SelectTrigger id="mentor-experience">
                     <SelectValue placeholder="Select years of experience" />
                   </SelectTrigger>
@@ -357,7 +408,7 @@ export default function MentorshipPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="mentor-availability">Weekly Availability (hours)</Label>
-                  <Select onValueChange={(value) => handleInputChange("weeklyAvailability", value)}>
+                  <Select onValueChange={(value) => handleInputChange("weeklyAvailability", Number.parseInt(value))}>
                     <SelectTrigger id="mentor-availability">
                       <SelectValue placeholder="Select hours per week" />
                     </SelectTrigger>
@@ -375,7 +426,7 @@ export default function MentorshipPage() {
                   <Select
                     onValueChange={(value) => {
                       handleInputChange("pricingOption", "Hourly")
-                      handleInputChange("hourlyRate", value)
+                      handleInputChange("hourlyRate", Number.parseInt(value))
                     }}
                   >
                     <SelectTrigger id="mentor-price">
@@ -419,7 +470,6 @@ export default function MentorshipPage() {
               Your mentor application has been submitted successfully!
             </div>
           )}
-
         </TabsContent>
 
         <TabsContent value="my-mentorships" className="space-y-6">
@@ -701,6 +751,14 @@ export default function MentorshipPage() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Mentorship Request Modal */}
+      <MentorshipRequestModal
+        isOpen={requestModalOpen}
+        onClose={() => setRequestModalOpen(false)}
+        mentorId={selectedMentor.id}
+        mentorName={selectedMentor.name}
+      />
     </div>
   )
 }
