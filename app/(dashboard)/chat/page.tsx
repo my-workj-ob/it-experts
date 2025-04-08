@@ -288,6 +288,7 @@ export default function ChatPage() {
       reconnectionAttempts: 5,
       reconnectionDelay: 1000,
       timeout: 10000,
+      addTrailingSlash: false
     })
 
     socketRef.current = socket
