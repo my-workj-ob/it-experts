@@ -221,6 +221,7 @@ export default function ChatPage() {
   const socketInitialized = useRef(false)
   const [isRecording, setIsRecording] = useState(false)
   const [isAttaching, setIsAttaching] = useState(false)
+  const eventHandlersInitialized = useRef(false)
 
   // Function to select a contact - this prevents the infinite loop
   const selectContact = useCallback(
@@ -277,6 +278,7 @@ export default function ChatPage() {
     if (socketInitialized.current || !currentUserId) return
 
     socketInitialized.current = true
+    console.log("Initializing socket connection...")
 
     // Connect to the Socket.io server
     const socket = io("http://localhost:3030", {
@@ -315,6 +317,23 @@ export default function ChatPage() {
       }, 1000)
     })
 
+    // Cleanup on unmount
+    return () => {
+      console.log("Disconnecting socket")
+      socket.disconnect()
+      socketInitialized.current = false
+      eventHandlersInitialized.current = false
+    }
+  }, [currentUserId]) // Only depend on currentUserId
+
+  // Setup event handlers separately to avoid re-registering them
+  useEffect(() => {
+    if (!socketRef.current || eventHandlersInitialized.current || !currentUserId) return
+
+    const socket = socketRef.current
+    eventHandlersInitialized.current = true
+    console.log("Setting up socket event handlers...")
+
     // Handle online users list
     socket.on("onlineUsers", (onlineUserIds: number[]) => {
       console.log("Online users:", onlineUserIds)
@@ -340,47 +359,76 @@ export default function ChatPage() {
     socket.on("newMessage", (messageData: Message) => {
       console.log("New message received:", messageData)
 
-      // Add the new message to the messages state if it's relevant to the current chat
-      setMessages((prevMessages) => {
-        // Check if this message is already in our list (by id)
-        if (prevMessages.some((msg) => msg.id === messageData.id)) {
-          return prevMessages
-        }
+      // Xabarni ID bo'yicha tekshirish uchun funksiya
+      const messageExists = (messages: Message[], id: number) => {
+        return messages.some((msg) => msg.id === id)
+      }
 
-        // Check if the message is relevant to the current chat
-        if (
-          selectedContact &&
-          ((messageData.sender.id === currentUserId && messageData.receiver.id === selectedContact.id) ||
-            (messageData.receiver.id === currentUserId && messageData.sender.id === selectedContact.id))
-        ) {
-          // If we're the receiver and the chat is open, mark as read immediately
-          if (messageData.receiver.id === currentUserId && selectedContact.id === messageData.sender.id) {
-            socket.emit("markMessagesAsRead", {
-              senderId: messageData.sender.id,
-              receiverId: currentUserId,
-            })
+      // Agar bu xabar o'zimiz yuborgan xabar bo'lsa, uni qayta qo'shmaslik kerak
+      // Chunki biz allaqachon uni optimistik yangilash orqali qo'shganmiz
+      if (messageData.sender.id === currentUserId) {
+        // Faqat vaqtinchalik xabarni serverdan kelgan xabar bilan almashtiramiz
+        setMessages((prevMessages) =>
+          prevMessages.map((msg) => {
+            // Agar bu xabar vaqtinchalik bo'lsa (id raqam emas string bo'lsa)
+            if (
+              typeof msg.id === "number" &&
+              msg.id > 1000000000000 &&
+              msg.sender.id === currentUserId &&
+              msg.receiver.id === messageData.receiver.id &&
+              msg.message === messageData.message
+            ) {
+              return messageData // Vaqtinchalik xabarni serverdan kelgan xabar bilan almashtiramiz
+            }
+            return msg
+          }),
+        )
 
-            // Return with isRead set to true
+        // Kontaktlar ro'yxatidagi oxirgi xabarni yangilash
+        setUsers((prevUsers) =>
+          prevUsers.map((user) =>
+            user.id === messageData.receiver.id ? { ...user, lastMessage: messageData.message } : user,
+          ),
+        )
+
+        return // Boshqa ishlov berish kerak emas
+      }
+
+      // Kontaktlar ro'yxatidagi oxirgi xabar va o'qilmagan xabarlar sonini yangilash
+      if (messageData.receiver.id === currentUserId) {
+        setUsers((prevUsers) => {
+          return prevUsers.map((user) => {
+            if (user.id === messageData.sender.id) {
+              // Agar bu foydalanuvchi hozirda tanlangan bo'lsa, o'qilmagan xabarlar sonini oshirmaymiz
+              const isSelected = selectedContact && selectedContact.id === user.id
+              return {
+                ...user,
+                lastMessage: messageData.message,
+                unread: isSelected ? 0 : (user.unread || 0) + 1,
+              }
+            }
+            return user
+          })
+        })
+
+        // Agar xabar joriy chatga tegishli bo'lsa, uni messages holatiga qo'shamiz
+        if (selectedContact && selectedContact.id === messageData.sender.id) {
+          // Xabarni o'qilgan deb belgilash
+          socket.emit("markMessagesAsRead", {
+            senderId: messageData.sender.id,
+            receiverId: currentUserId,
+          })
+
+          // Xabarni messages holatiga qo'shish
+          setMessages((prevMessages) => {
+            // Agar xabar allaqachon mavjud bo'lsa, hech narsa o'zgartirmaymiz
+            if (messageExists(prevMessages, messageData.id)) {
+              return prevMessages
+            }
             return [...prevMessages, { ...messageData, isRead: true }]
-          }
-
-          return [...prevMessages, messageData]
+          })
         }
-
-        // If the message is for us but not from the currently selected contact,
-        // increment the unread count for that contact
-        if (messageData.receiver.id === currentUserId) {
-          setUsers((prevUsers) =>
-            prevUsers.map((user) =>
-              user.id === messageData.sender.id
-                ? { ...user, unread: (user.unread || 0) + 1, lastMessage: messageData.message }
-                : user,
-            ),
-          )
-        }
-
-        return prevMessages
-      })
+      }
     })
 
     // Handle messages marked as read
@@ -428,13 +476,21 @@ export default function ChatPage() {
       console.error("Failed to reconnect")
     })
 
-    // Cleanup on unmount
     return () => {
-      console.log("Disconnecting socket")
-      socket.disconnect()
-      socketInitialized.current = false
+      // Remove all event listeners when component unmounts or dependencies change
+      socket.off("onlineUsers")
+      socket.off("userOnline")
+      socket.off("userOffline")
+      socket.off("newMessage")
+      socket.off("messagesMarkedAsRead")
+      socket.off("unreadCounts")
+      socket.off("reconnect")
+      socket.off("reconnect_attempt")
+      socket.off("reconnect_error")
+      socket.off("reconnect_failed")
+      eventHandlersInitialized.current = false
     }
-  }, [currentUserId]) // Remove selectedContact and getUnreadCounts from dependencies
+  }, [currentUserId, selectedContact, getUnreadCounts])
 
   // Handle selected contact changes
   useEffect(() => {
@@ -507,66 +563,72 @@ export default function ChatPage() {
   }, []) // Only run once on mount
 
   // Fetch chat history when selected contact changes
-  useEffect(() => {
-    const fetchChatHistory = async () => {
-      if (selectedContact?.id && currentUserId) {
-        try {
-          const userId = currentUserId
-          const receiverId = selectedContact.id
+  const fetchChatHistory = async () => {
+    if (!selectedContact?.id || !currentUserId) return
 
-          console.log("Fetching chat history for:", { userId, receiverId })
+    try {
+      const userId = currentUserId
+      const receiverId = selectedContact.id
 
-          const url = `/chat/history/${userId}/${receiverId}`
-          const response = await axiosInstance.get(url)
+      console.log("Fetching chat history for:", { userId, receiverId })
 
-          if (response.data && response.data.success) {
-            if (Array.isArray(response.data.chatHistory)) {
-              // Sort messages by timestamp to ensure correct order
-              const sortedMessages = [...response.data.chatHistory].sort(
-                (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
-              )
+      const url = `/chat/history/${userId}/${receiverId}`
+      const response = await axiosInstance.get(url)
 
-              setMessages(sortedMessages)
+      if (response.data && response.data.success) {
+        if (Array.isArray(response.data.chatHistory)) {
+          // Xabarlarni vaqt bo'yicha saralash
+          const sortedMessages = [...response.data.chatHistory].sort(
+            (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
+          )
 
-              // Mark messages as read when loading chat history
-              if (socketRef.current) {
-                socketRef.current.emit("markMessagesAsRead", {
-                  senderId: receiverId,
-                  receiverId: userId,
-                })
-              }
+          console.log("Loaded chat history, messages count:", sortedMessages.length)
 
-              // Update last message in contacts list
-              if (sortedMessages.length > 0) {
-                const lastMsg = sortedMessages[sortedMessages.length - 1]
-                setUsers((prevUsers) =>
-                  prevUsers.map((user) =>
-                    user.id === selectedContact.id ? { ...user, lastMessage: lastMsg.message } : user,
-                  ),
-                )
-              }
-            } else {
-              console.error("Error: chat history is not in expected array format", response.data)
-              setMessages([])
-            }
-          } else {
-            console.error("Error in chat history response", response.data)
-            setMessages([])
+          // Xabarlarni holatga saqlash
+          setMessages(sortedMessages)
+
+          // Xabarlarni o'qilgan deb belgilash
+          if (socketRef.current) {
+            socketRef.current.emit("markMessagesAsRead", {
+              senderId: receiverId,
+              receiverId: userId,
+            })
           }
-        } catch (error) {
-          console.error("Error fetching chat history:", error)
+
+          // Kontaktlar ro'yxatidagi oxirgi xabarni yangilash
+          if (sortedMessages.length > 0) {
+            const lastMsg = sortedMessages[sortedMessages.length - 1]
+            setUsers((prevUsers) =>
+              prevUsers.map((user) =>
+                user.id === selectedContact.id ? { ...user, lastMessage: lastMsg.message, unread: 0 } : user,
+              ),
+            )
+          }
+        } else {
+          console.error("Error: chat history is not in expected array format", response.data)
           setMessages([])
         }
+      } else {
+        console.error("Error in chat history response", response.data)
+        setMessages([])
       }
+    } catch (error) {
+      console.error("Error fetching chat history:", error)
+      setMessages([])
     }
-
-    fetchChatHistory()
+  }
+  useEffect(() => {
+    if (selectedContact?.id && currentUserId) {
+      // Clear messages before fetching new ones
+      setMessages([])
+      fetchChatHistory()
+    }
   }, [selectedContact?.id, currentUserId])
 
   // Scroll to bottom when messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
-  }, [messages])
+  }, [messages, messagesEndRef])
 
   // Mark messages as read when chat area is visible and has focus
   useEffect(() => {
@@ -604,8 +666,8 @@ export default function ChatPage() {
       message: message.trim(),
     }
 
-    // Create a temporary message for optimistic UI update
-    const tempId = Date.now()
+    // Vaqtinchalik xabar yaratish (optimistik UI yangilash uchun)
+    const tempId = Date.now() // Timestamp ID - bu juda katta raqam bo'ladi
     const tempMessage = {
       id: tempId,
       sender: {
@@ -621,27 +683,29 @@ export default function ChatPage() {
       timestamp: new Date().toISOString(),
     }
 
-    // Add temporary message to UI
+    // Vaqtinchalik xabarni UI ga qo'shish
     setMessages((prev) => [...prev, tempMessage])
+    console.log("Added temporary message to UI:", tempMessage)
 
-    // Clear the input field
+    // Kontaktlar ro'yxatidagi oxirgi xabarni yangilash
+    setUsers((prevUsers) =>
+      prevUsers.map((user) => (user.id === selectedContact.id ? { ...user, lastMessage: message.trim() } : user)),
+    )
+
+    // Kiritish maydonini tozalash
     setMessage("")
 
     try {
-      // Send the message via socket
+      // Xabarni socket orqali yuborish
       socketRef.current.emit("sendMessage", messageData, (response: any) => {
         console.log("Message sent response:", response)
 
         if (response && response.success && response.message) {
-          // Replace temporary message with real one from server
+          // Vaqtinchalik xabarni serverdan kelgan haqiqiy xabar bilan almashtirish
           setMessages((prevMessages) => prevMessages.map((msg) => (msg.id === tempId ? response.message : msg)))
-
-          // Update last message in contacts list
-          setUsers((prevUsers) =>
-            prevUsers.map((user) => (user.id === selectedContact.id ? { ...user, lastMessage: message.trim() } : user)),
-          )
+          console.log("Replaced temporary message with server message:", response.message)
         } else {
-          // Remove temporary message if sending failed
+          // Agar yuborish muvaffaqiyatsiz bo'lsa, vaqtinchalik xabarni olib tashlash
           setMessages((prev) => prev.filter((msg) => msg.id !== tempId))
           console.error("Failed to send message:", response)
           alert("Xabar yuborilmadi. Iltimos, qayta urinib ko'ring.")
@@ -649,7 +713,7 @@ export default function ChatPage() {
       })
     } catch (error) {
       console.error("Error sending message:", error)
-      // Remove temporary message if error occurred
+      // Xatolik yuz berganda vaqtinchalik xabarni olib tashlash
       setMessages((prev) => prev.filter((msg) => msg.id !== tempId))
       alert("Xabar yuborilmadi. Iltimos, qayta urinib ko'ring.")
     }
@@ -693,6 +757,8 @@ export default function ChatPage() {
     // Implement file attachment logic here
     console.log("Attaching file")
   }
+
+  console.log("Messages count:", messages.length)
 
   return (
     <div className="h-[calc(100vh-10rem)] flex bg-background">
