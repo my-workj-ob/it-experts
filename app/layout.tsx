@@ -24,7 +24,7 @@ export default function RootLayout({
           <AuthProvider>
             <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
               <Navbar />
-              <main className="flex-1 py-12 px-4 md:px-8">{children}</main>
+              <main className="flex-1  px-4 md:px-8">{children}</main>
             </ThemeProvider>
           </AuthProvider>
         </QueryClientProvider>

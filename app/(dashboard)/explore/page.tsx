@@ -8,7 +8,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Slider } from "@/components/ui/slider"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import UserCard from "@/components/user-card"
-import useProfile from "@/hooks/profile/use-profile"
 import axiosInstance from "@/lib/create-axios"
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { get, isArray } from "lodash"
@@ -158,7 +157,6 @@ export default function ExplorePage() {
     })
   }
 
-  const { userProfileData } = useProfile()
 
   return (
     <div className="container mx-auto space-y-6">
@@ -309,6 +307,7 @@ export default function ExplorePage() {
                     if (get(user, 'status') === 'accepted') {
                       return handleRemoveConnection(get(user, "id"))
                     } else if (get(user, 'status') === 'connect') {
+                      window.location.href = `/chat?receiverId=${get(user, "id")}`
                       return handleRequest({
                         "receiverId": get(user, "id")
                       })

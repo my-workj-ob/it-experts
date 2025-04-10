@@ -139,7 +139,17 @@ export default function UserCard({ matchPercentage, status, user, skills, onClic
         </div>
       </CardContent>
       <CardFooter className="flex justify-between p-4 pt-0">
-        <Button variant="outline" size="sm" className="w-[48%]">
+        <Button variant="outline" size="sm" className="w-[48%]" onClick={() => {
+          if (status === "accepted") {
+            window.location.href = `/chat?receiverId=${get(user, "id")}`
+          }
+          if (status === "pending") {
+            window.location.href = `/chat?receiverId=${get(user, "id")}`
+          }
+          if (status === "connect") {
+            window.location.href = `/chat?receiverId=${get(user, "id")}`
+          }
+        }}>
           <MessageSquare className="h-4 w-4 mr-2" />
           Message
         </Button>

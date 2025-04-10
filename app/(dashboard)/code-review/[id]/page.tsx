@@ -1,3 +1,8 @@
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   ArrowLeft,
   Check,
@@ -11,15 +16,9 @@ import {
   ThumbsUp,
 } from "lucide-react"
 import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
-export default function CodeReviewDetailPage({ params }: { params: { id: string } }) {
+export default function CodeReviewDetailPage() {
   // In a real app, you would fetch the code review data based on the ID
-  const reviewId = params.id
 
   return (
     <div className="container mx-auto py-8">

@@ -19,13 +19,13 @@ export default function ChatLayout({
   }
 
   return (
-    <div className="h-[calc(100vh-4rem)] flex bg-background">
+    <div className="h-[calc(100vh-100rem)] flex bg-background">
       {/* Sidebar */}
 
 
       {/* Main content */}
       <div className="flex-1 relative">
-        {/* Mobile toggle button */}
+
         {isMobile && !showSidebar && (
           <Button
             variant="outline"

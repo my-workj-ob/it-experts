@@ -2,7 +2,7 @@ import { io } from 'socket.io-client';
 
 export const useSocket = () => {
 
-	const socket = io('http://localhost:3030', {
+	const socket = io('https://tester-ajuz.onrender.com', {
 		transports: ['websocket', 'polling'],
 		withCredentials: true,
 		forceNew: true,
