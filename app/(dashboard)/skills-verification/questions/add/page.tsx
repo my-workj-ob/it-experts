@@ -10,13 +10,57 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea"
 import { toast } from "@/components/ui/use-toast"
 import useProfile from "@/hooks/profile/use-profile"
-import { questionService } from "@/services/question-service"
-import { skillService } from "@/services/skill-service"
-import { useQuery } from "@tanstack/react-query"
+import axiosInstance from "@/lib/create-axios"
+import { useMutation, useQuery } from "@tanstack/react-query"
 import { ArrowLeft } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
+
+// API base URL
+const API_URL = "http://localhost:3030"
+
+// Type definitions
+interface Question {
+  text: string
+  options: string[]
+  correctAnswer: number
+  skillId?: number
+  categoryId: number
+}
+
+interface Skill {
+  id: number
+  name: string
+}
+interface Category {
+  id: number
+  name: string
+}
+
+// API services
+const skillService = {
+  getSkillsProfileById: async (profileId?: number): Promise<Skill[]> => {
+    if (!profileId) return []
+    const response = await axiosInstance.get(`/skills?profileId=${profileId}`)
+    return response.data
+  },
+}
+const categoryServie = {
+  getCategories: async (profileId?: number): Promise<Category[]> => {
+    if (!profileId) return []
+    const response = await axiosInstance.get(`/categories`)
+    return response.data
+  },
+}
+
+
+const questionService = {
+  createQuestion: async (question: Question): Promise<any> => {
+    const response = await axiosInstance.post(`/questions`, question)
+    return response.data
+  },
+}
 
 export default function AddQuestionPage() {
   const router = useRouter()
@@ -29,13 +73,46 @@ export default function AddQuestionPage() {
     queryFn: async () => await skillService.getSkillsProfileById(userProfileData?.id),
     enabled: !!userProfileData?.id,
   })
+  const { data: categories = [] } = useQuery({
+    queryKey: ["categories", userProfileData?.id],
+    queryFn: async () => await categoryServie.getCategories(userProfileData?.id),
+    enabled: !!userProfileData?.id,
+  })
+
+  // Create question mutation
+  const createQuestionMutation = useMutation({
+    mutationFn: (questionData: Question) => questionService.createQuestion(questionData),
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Question added successfully",
+      })
+
+      // Reset form
+      setQuestion({
+        text: "",
+        options: ["", "", "", ""],
+        correctAnswer: 0,
+        skillId: 0,
+        categoryId: 0,
+      })
+    },
+    onError: (error) => {
+      console.error("Error adding question:", error)
+      toast({
+        title: "Error",
+        description: "Failed to add question. Please try again.",
+      })
+    },
+  })
 
   // Question state
-  const [question, setQuestion] = useState({
+  const [question, setQuestion] = useState<Question>({
     text: "",
     options: ["", "", "", ""],
     correctAnswer: 0,
     skillId: 0,
+    categoryId: 0,
   })
 
   // Handle text change
@@ -72,6 +149,14 @@ export default function AddQuestionPage() {
     })
   }
 
+  // Handle category change (if needed)
+  const handleCategoryChange = (value: string) => {
+    setQuestion({
+      ...question,
+      categoryId: Number(value),
+    })
+  }
+
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -81,7 +166,6 @@ export default function AddQuestionPage() {
       toast({
         title: "Error",
         description: "Question text is required",
-        variant: "destructive",
       })
       return
     }
@@ -94,40 +178,10 @@ export default function AddQuestionPage() {
       return
     }
 
-    if (question.skillId === 0) {
-      toast({
-        title: "Error",
-        description: "Please select a skill",
-      })
-      return
-    }
 
-    try {
-      setIsSubmitting(true)
-      await questionService.createQuestion(question)
 
-      toast({
-        title: "Success",
-        description: "Question added successfully",
-      })
-
-      // Reset form
-      setQuestion({
-        text: "",
-        options: ["", "", "", ""],
-        correctAnswer: 0,
-        skillId: 0,
-      })
-    } catch (error) {
-      console.error("Error adding question:", error)
-      toast({
-        title: "Error",
-        description: "Failed to add question. Please try again.",
-        variant: "destructive",
-      })
-    } finally {
-      setIsSubmitting(false)
-    }
+    // Submit using React Query mutation
+    createQuestionMutation.mutate(question)
   }
 
   return (
@@ -153,7 +207,7 @@ export default function AddQuestionPage() {
           <CardContent className="space-y-6">
             <div className="space-y-2">
               <Label htmlFor="skill">
-                Skill <span className="text-destructive">*</span>
+                Skill
               </Label>
               <Select value={question.skillId.toString()} onValueChange={handleSkillChange}>
                 <SelectTrigger id="skill">
@@ -162,6 +216,24 @@ export default function AddQuestionPage() {
                 <SelectContent>
                   <SelectItem value="0">Select a skill</SelectItem>
                   {skills.map((skill) => (
+                    <SelectItem key={skill.id} value={skill.id.toString()}>
+                      {skill.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="skill">
+                Category <span className="text-destructive">*</span>
+              </Label>
+              <Select value={question.categoryId.toString()} onValueChange={handleCategoryChange}>
+                <SelectTrigger id="skill">
+                  <SelectValue placeholder="Select a skill" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="0">Select a skill</SelectItem>
+                  {categories.map((skill) => (
                     <SelectItem key={skill.id} value={skill.id.toString()}>
                       {skill.name}
                     </SelectItem>
@@ -218,8 +290,8 @@ export default function AddQuestionPage() {
             <Button variant="outline" type="button" onClick={() => router.back()}>
               Cancel
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Adding..." : "Add Question"}
+            <Button type="submit" disabled={createQuestionMutation.isPending}>
+              {createQuestionMutation.isPending ? "Adding..." : "Add Question"}
             </Button>
           </CardFooter>
         </form>
@@ -227,4 +299,3 @@ export default function AddQuestionPage() {
     </div>
   )
 }
-

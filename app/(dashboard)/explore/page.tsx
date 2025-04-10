@@ -1,15 +1,20 @@
 "use client"
 
-import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Slider } from "@/components/ui/slider"
+import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Search, Filter } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Slider } from "@/components/ui/slider"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import UserCard from "@/components/user-card"
+import useProfile from "@/hooks/profile/use-profile"
+import axiosInstance from "@/lib/create-axios"
+import { useMutation, useQuery } from "@tanstack/react-query"
+import { get, isArray } from "lodash"
+import { Filter, Search } from "lucide-react"
+import { useState } from "react"
+
 
 // Mock data for demonstration
 const mockUsers = [
@@ -20,7 +25,7 @@ const mockUsers = [
     location: "San Francisco, CA",
     skills: ["React", "TypeScript", "Tailwind CSS"],
     experience: "5 years",
-    matchScore: 95,
+    matchPercentage: 95,
     avatar: "/placeholder.svg?height=80&width=80",
   },
   {
@@ -30,7 +35,7 @@ const mockUsers = [
     location: "New York, NY",
     skills: ["Figma", "UI Design", "User Research"],
     experience: "4 years",
-    matchScore: 88,
+    matchPercentage: 88,
     avatar: "/placeholder.svg?height=80&width=80",
   },
   {
@@ -40,7 +45,7 @@ const mockUsers = [
     location: "Seattle, WA",
     skills: ["Docker", "Kubernetes", "AWS"],
     experience: "7 years",
-    matchScore: 82,
+    matchPercentage: 82,
     avatar: "/placeholder.svg?height=80&width=80",
   },
   {
@@ -50,7 +55,7 @@ const mockUsers = [
     location: "Austin, TX",
     skills: ["Python", "TensorFlow", "Data Analysis"],
     experience: "3 years",
-    matchScore: 79,
+    matchPercentage: 79,
     avatar: "/placeholder.svg?height=80&width=80",
   },
   {
@@ -60,7 +65,7 @@ const mockUsers = [
     location: "Chicago, IL",
     skills: ["Node.js", "Express", "MongoDB"],
     experience: "6 years",
-    matchScore: 75,
+    matchPercentage: 75,
     avatar: "/placeholder.svg?height=80&width=80",
   },
   {
@@ -70,7 +75,7 @@ const mockUsers = [
     location: "Boston, MA",
     skills: ["Agile", "Product Strategy", "User Stories"],
     experience: "8 years",
-    matchScore: 72,
+    matchPercentage: 72,
     avatar: "/placeholder.svg?height=80&width=80",
   },
 ]
@@ -79,6 +84,81 @@ export default function ExplorePage() {
   const [showFilters, setShowFilters] = useState(false)
   const [matchThreshold, setMatchThreshold] = useState([70])
   const [filteredUsers, setFilteredUsers] = useState(mockUsers)
+
+  const { data, refetch } = useQuery({
+    queryKey: ['explorer'],
+    queryFn: async () => {
+      const data = await axiosInstance.get("/explore")
+      return data
+    }
+  })
+  const { data: outgoing, refetch: outgoingRefetch } = useQuery({
+    queryKey: ['connections_requests_outgoing'],
+    queryFn: async () => {
+      const data = await axiosInstance.get("/connections/requests/outgoing")
+      return data
+    }
+  })
+  const { data: connections, refetch: connectionsRefetch } = useQuery({
+    queryKey: ['connections_me'],
+    queryFn: async () => {
+      const data = await axiosInstance.get("/connections/me")
+      return data
+    }
+  })
+
+  const exploreData = isArray(get(data, "data")) ? get(data, "data", []) : []
+
+  const outgoingData = isArray(get(outgoing, "data")) ? get(outgoing, "data", []) : []
+  const connectionsData = isArray(get(connections, "data")) ? get(connections, "data", []) : []
+
+
+
+  const connection = useMutation({
+    mutationKey: ['connections_request'],
+    mutationFn: async (requestConnection) => {
+      const data = await axiosInstance.post(`/connections/request`, requestConnection)
+      return data.data
+    }
+  })
+  const removeConnection = useMutation({
+    mutationKey: ['connections_remove'],
+    mutationFn: async (requestConnection) => {
+      const data = await axiosInstance.delete(`/connections/remove/${requestConnection}`,)
+      return data.data
+    }
+  })
+  const acceptConnection = useMutation({
+    mutationKey: ['connections_accept'],
+    mutationFn: async (requestConnection) => {
+      const data = await axiosInstance.post(`/connections/accept/${requestConnection}`,)
+      return data.data
+    }
+  })
+
+  const handleRequest = (data: any) => {
+    connection.mutate(data, {
+      onSuccess: () => {
+        refetch()
+      }
+    })
+  }
+  const handleRemoveConnection = (data: any) => {
+    removeConnection.mutate(data, {
+      onSuccess: () => {
+        refetch()
+      }
+    })
+  }
+  const handleAccept = (data: any) => {
+    acceptConnection.mutate(data, {
+      onSuccess: () => {
+        refetch()
+      }
+    })
+  }
+
+  const { userProfileData } = useProfile()
 
   return (
     <div className="container mx-auto space-y-6">
@@ -179,23 +259,67 @@ export default function ExplorePage() {
         </TabsList>
         <TabsContent value="recommended" className="mt-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredUsers.map((user) => (
-              <UserCard key={user.id} user={user} />
+            {exploreData?.map((user: any) => (
+              <UserCard matchPercentage={get
+                (user, "matchPercentage")
+              } key={user.id} skills={get(user, "skills")} status={get(user, "status")} user={get(user, "profile")}
+                onClick={() => {
+                  if (get(user, 'status') === 'accepted') {
+                    return handleRemoveConnection(get(user, "id"))
+                  } else if (get(user, 'status') === 'connect') {
+                    return handleRequest({
+                      "receiverId": get(user, "id")
+                    })
+                  }
+                  else if (get(user, 'status') === 'pending') {
+                    return handleAccept(get(user, "id"))
+                  }
+                }} />
             ))}
           </div>
         </TabsContent>
         <TabsContent value="recent" className="mt-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredUsers
-              .sort((a, b) => b.id - a.id)
-              .map((user) => (
-                <UserCard key={user.id} user={user} />
-              ))}
+            {outgoingData?.map((user: any) => (
+              <UserCard key={user.id} matchPercentage={get
+                (user, "matchPercentage")
+              } status={get(user, "status")} skills={get(user, "skills")} user={get(user, "receiver.profile")} onClick={() => {
+                if (get(user, 'status') === 'accepted') {
+                  return handleRemoveConnection(get(user, "id"))
+                } else if (get(user, 'status') === 'connect') {
+                  return handleRequest({
+                    "receiverId": get(user, "id")
+                  })
+                }
+                else if (get(user, 'status') === 'pending') {
+                  return handleAccept(get(user, "id"))
+                }
+              }} />
+            ))}
           </div>
         </TabsContent>
         <TabsContent value="connections" className="mt-6">
           <div className="flex flex-col items-center justify-center py-12 text-center">
-            <p className="text-muted-foreground mb-4">You haven&apos;t connected with anyone yet</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {connectionsData?.map((user: any) => (
+                <UserCard key={user.id} matchPercentage={get
+                  (user, "matchPercentage")
+                } status={get(user, "status")} skills={get(user, "skills")} user={get(user, "receiver.profile")}
+                  onClick={() => {
+                    if (get(user, 'status') === 'accepted') {
+                      return handleRemoveConnection(get(user, "id"))
+                    } else if (get(user, 'status') === 'connect') {
+                      return handleRequest({
+                        "receiverId": get(user, "id")
+                      })
+                    }
+                    else if (get(user, 'status') === 'pending') {
+                      return handleAccept(get(user, "id")
+                      )
+                    }
+                  }} />
+              ))}
+            </div>
             <Button>Find Connections</Button>
           </div>
         </TabsContent>

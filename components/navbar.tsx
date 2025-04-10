@@ -15,15 +15,61 @@ import {
 import { Input } from "@/components/ui/input"
 import useAuthStatus from "@/hooks/auth/use-auth-status"
 import useAuth from "@/hooks/auth/useAuth"
+import useSocketNotification from "@/hooks/notification/use-socket-notification"
+import { useNotifications, useUnreadNotificationCount } from "@/hooks/notification/useNotification"
 import useProfile from "@/hooks/profile/use-profile"
-import { get } from "lodash"
-import { Bell, Search, Zap } from "lucide-react"
+import axiosInstance from "@/lib/create-axios"
+import { get, isArray } from "lodash"
+import { Bell, CheckCircle, Search, XCircle, Zap } from "lucide-react"
 import Link from "next/link"
+import { useEffect, useState } from "react"
+
 
 export default function Navbar() {
-  const { isLoggedIn } = useAuthStatus()
+  const { isLoggedIn, } = useAuthStatus()
   const { userProfileData } = useProfile()
   const { logout } = useAuth()
+
+  const { data: notificationList = [] } = useNotifications()
+  const { data: unreadCount = 0 } = useUnreadNotificationCount()
+  useSocketNotification(userProfileData?.id)
+  const [notifications, setNotifications] = useState(notificationList);
+
+
+
+  const handleMarkAsRead = async (notificationId: number) => {
+    try {
+      // PATCH so'rovini yuborish
+      await axiosInstance.patch(`/notifications/${notificationId}/read`);
+
+      // O'qilgan bildirishnomani state'da yangilash
+      setNotifications((prevNotifications: any) =>
+        prevNotifications.map((notification: any) =>
+          notification.id === notificationId
+            ? { ...notification, isRead: true }
+            : notification
+        )
+      );
+    } catch (error) {
+      console.error("Bildirishnomani o'qilgan deb belgilashda xatolik:", error);
+    }
+  };
+
+
+
+  const MAX_NOTIFICATIONS = 50;
+  const DEBOUNCE_TIME = 300; // in ms
+  let timeoutId: NodeJS.Timeout;
+
+  useEffect(() => {
+    if (isArray(notificationList)) {
+      clearTimeout(timeoutId); // Clear previous timeout
+      timeoutId = setTimeout(() => {
+        setNotifications(notificationList.slice(0, MAX_NOTIFICATIONS));
+      }, DEBOUNCE_TIME);
+    }
+  }, [notificationList]);
+
 
   return (
     <header className="sticky top-0 z-30 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -44,25 +90,44 @@ export default function Navbar() {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon" className="relative">
                     <Bell className="h-5 w-5" />
-                    <Badge className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center">3</Badge>
+                    {unreadCount > 0 && (
+                      <Badge className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center">
+                        {unreadCount}
+                      </Badge>
+                    )}
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-80">
                   <DropdownMenuLabel>Notifications</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <div className="max-h-80 overflow-y-auto">
-                    {[1, 2, 3].map((i) => (
-                      <DropdownMenuItem key={i} className="p-3 cursor-pointer">
+                    {notifications.map((notification) => (
+                      <DropdownMenuItem
+                        key={notification.id}
+                        className="p-3 cursor-pointer"
+                        onMouseEnter={() => {
+                          if (!notification.isRead) {
+                            // Yurganida o'qilmagan bildirishnoma bo'lsa, ko'rsatish
+                          }
+                        }}
+                        onClick={() => handleMarkAsRead(notification.id)}
+                      >
                         <div className="flex gap-3">
                           <Avatar className="h-9 w-9">
                             <AvatarImage src={`/placeholder.svg?height=36&width=36`} />
-                            <AvatarFallback>U{i}</AvatarFallback>
+                            <AvatarFallback>U</AvatarFallback>
                           </Avatar>
                           <div className="space-y-1">
-                            <p className="text-sm font-medium leading-none">New connection request</p>
-                            <p className="text-xs text-muted-foreground">User {i} wants to connect with you</p>
-                            <p className="text-xs text-muted-foreground">2 hour{i > 1 ? "s" : ""} ago</p>
+                            <p className="text-sm font-medium leading-none">{notification.message}</p>
+                            <p className="text-xs text-muted-foreground">{notification.body}</p>
+                            <p className="text-xs text-muted-foreground">{new Date(notification.createdAt).toLocaleTimeString()}</p>
                           </div>
+                          {/* O'qilgan va o'qilmagan ikonkalari */}
+                          {notification.isRead ? (
+                            <CheckCircle className="h-5 w-5 text-green-500" />
+                          ) : (
+                            <XCircle className="h-5 w-5 text-red-500" />
+                          )}
                         </div>
                       </DropdownMenuItem>
                     ))}

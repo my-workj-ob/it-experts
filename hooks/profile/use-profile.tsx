@@ -7,7 +7,6 @@ const useProfile = () => {
   const { data, refetch } = useQuery({
     queryKey: ["/profile"],
     queryFn: () => ProfileService.getUserProfile()
-
   })
 
   const userProfileData = get(data, "data") ? get(data, "data", {}) : {}

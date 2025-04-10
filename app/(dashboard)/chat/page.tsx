@@ -281,8 +281,8 @@ export default function ChatPage() {
     console.log("Initializing socket connection...")
 
     // Connect to the Socket.io server
-    const socket = io("https://tester-ajuz.onrender.com", {
-      transports: ["websocket", "polling"], // Use both for better compatibility
+    const socket = io("http://localhost:3030/chat", {
+      transports: ["websocket", "polling"],
       withCredentials: true,
       forceNew: true,
       reconnectionAttempts: 5,
