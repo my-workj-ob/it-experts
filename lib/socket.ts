@@ -4,7 +4,7 @@ let socket: Socket | null = null;
 
 if (typeof window !== 'undefined') {
 	const token = localStorage.getItem('accessToken');
-	socket = io('https://tester-nu-two.vercel.app/notifications', {
+	socket = io('https://tester-ajuz.onrender.com/notifications', {
 		auth: {
 			token,
 		},
