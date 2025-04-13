@@ -4,6 +4,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { useNotifications } from "@/hooks/notification/use-notification"
+import useProfile from "@/hooks/profile/use-profile"
 import axiosInstance from "@/lib/create-axios"
 import {
   Bell,
@@ -129,6 +131,9 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [events, setEvents] = useState(5) // Keeping events hardcoded as it's not in the API
+  const { userProfileData } = useProfile()
+  const userId = userProfileData?.id
+  const { registerWebPush } = useNotifications({ userId })
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -333,7 +338,12 @@ export default function DashboardPage() {
         color: "bg-teal-50 dark:bg-teal-900/30 border-teal-200 dark:border-teal-800 text-teal-700 dark:text-teal-300",
       }
     })
+
   }
+
+
+
+
 
   return (
     <div className="container mx-auto space-y-6 py-6">
@@ -372,9 +382,12 @@ export default function DashboardPage() {
               <Button
                 size="sm"
                 className="bg-gradient-to-r from-amber-500 to-rose-500 hover:from-amber-600 hover:to-rose-600 dark:from-amber-500 dark:to-rose-500"
+                onClick={() => {
+                  registerWebPush(userId)
+                }}
               >
                 <Bell className="h-4 w-4 mr-2" />
-                Notifications
+                Notification
               </Button>
             </div>
           </div>

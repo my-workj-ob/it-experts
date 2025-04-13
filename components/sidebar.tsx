@@ -315,7 +315,7 @@ export default function Sidebar() {
           )}
 
           {/* Premium Section Header */}
-          <div
+          {/* <div
             className="flex items-center justify-between px-3 py-2 mt-3 cursor-pointer hover:bg-amber-50/10 dark:hover:bg-amber-900/10 rounded-md transition-all duration-300 group"
             onClick={() => toggleSection("premium")}
           >
@@ -328,10 +328,10 @@ export default function Sidebar() {
             ) : (
               <ChevronRight className="h-4 w-4 text-amber-500 dark:text-amber-400 group-hover:text-amber-400 dark:group-hover:text-amber-300 transition-all duration-300" />
             )}
-          </div>
+          </div> */}
 
           {/* Premium Routes */}
-          {expandedSections.premium && (
+          {/* {expandedSections.premium && (
             <div className="grid gap-1 ml-1 mt-1">
               {premiumRoutes.map((route) => (
                 <Link
@@ -397,7 +397,7 @@ export default function Sidebar() {
                 </Link>
               ))}
             </div>
-          )}
+          )} */}
         </nav>
       </ScrollArea>
     </div>

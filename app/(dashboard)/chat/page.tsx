@@ -14,6 +14,7 @@ import { useChatSocket } from "@/hooks/chat/use-chat-sockets"
 import { useChatUI } from "@/lib/use-chat-ui"
 
 // Import components
+import { WebPushSubscription } from "@/components/notifications/web-push-subscription"
 import { ChatHeader } from "./components/chat-header"
 import { ChatSettingsModal } from "./components/chat-settings"
 import { ChatThemeSelector } from "./components/chat-theme-selector"
@@ -26,6 +27,7 @@ import { MessageStatusBar } from "./components/message-status"
 import { UserProfileCard } from "./components/user-profile-card"
 import { VoiceRecorder } from "./components/voice-recorder"
 import { WelcomeScreen } from "./components/welcome-screen"
+
 
 const messageAnimations = `
   @keyframes message-send {
@@ -187,6 +189,7 @@ export default function ChatInterface({ initialReceiverId = null }: { initialRec
   // Handle sending a message
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault()
+    // Check if the message is empty or if no contact is selected
 
     if ((!message.trim() && !audioBlob && selectedFiles.length === 0) || !selectedContact || !currentUserId) {
       return
@@ -371,6 +374,8 @@ export default function ChatInterface({ initialReceiverId = null }: { initialRec
 
   return (
     <>
+      {/* Web Push Subscription Component */}
+      <WebPushSubscription />
       <style jsx global>
         {messageAnimations}
       </style>
