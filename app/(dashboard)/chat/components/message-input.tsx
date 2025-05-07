@@ -1,5 +1,7 @@
 "use client"
 
+import type React from "react"
+
 import { EmojiPicker } from "@/components/emoji-picker"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -7,6 +9,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { Mic, Paperclip, Send, Smile } from "lucide-react"
 import type { FormEvent } from "react"
+import { useEffect, useRef, useState } from "react"
 
 interface MessageInputProps {
   message: string
@@ -14,10 +17,11 @@ interface MessageInputProps {
   handleSendMessage: (e: FormEvent) => void
   handleAttachment: () => void
   startRecording: () => void
-  debouncedEmitTyping: (receiverId: number) => void
+  debouncedEmitTyping: (receiverId: number, isTyping: boolean) => void
   selectedContactId: number
   audioBlob: Blob | null
   handleEmojiSelect: (emoji: string) => void
+  emitTyping: (isTyping: boolean) => void;
 }
 
 export const MessageInput = ({
@@ -27,13 +31,95 @@ export const MessageInput = ({
   handleAttachment,
   startRecording,
   debouncedEmitTyping,
+  emitTyping,
   selectedContactId,
   audioBlob,
   handleEmojiSelect,
 }: MessageInputProps) => {
+  // Track typing state
+  const [isTyping, setIsTyping] = useState(false)
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const lastTypingEmitRef = useRef<number>(0)
+
+  // Clear typing timeout and set typing to false
+  const clearTypingTimeout = () => {
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current)
+      typingTimeoutRef.current = null
+    }
+  }
+
+  const stopTyping = () => {
+    clearTypingTimeout();
+    if (isTyping) {
+      setIsTyping(false);
+      debouncedEmitTyping(selectedContactId, false);
+    }
+  }
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value;
+    setMessage(newValue);
+
+    const now = Date.now();
+
+    if (!newValue.trim()) {
+      debouncedEmitTyping(selectedContactId, false);
+      stopTyping();
+      return;
+    }
+
+    if (!isTyping || now - lastTypingEmitRef.current > 2000) {
+      setIsTyping(true);
+      debouncedEmitTyping(selectedContactId, true);
+      lastTypingEmitRef.current = now;
+    }
+
+    clearTypingTimeout();
+    typingTimeoutRef.current = setTimeout(() => {
+      debouncedEmitTyping(selectedContactId, false);
+      stopTyping();
+      clearTypingTimeout();
+      setIsTyping(false);
+    }, 2000);
+  }
+
+  const onSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    stopTyping();
+    handleSendMessage(e);
+
+  }
+
+  // Handle form submission
+
+  // Clean up when component unmounts or selected contact changes
+  useEffect(() => {
+    // Stop typing when contact changes
+    stopTyping()
+
+    // Clean up on unmount
+    return () => {
+      stopTyping()
+    }
+  }, [selectedContactId, debouncedEmitTyping,])
+
+
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      debouncedEmitTyping(selectedContactId, false)
+    }
+
+    window.addEventListener("beforeunload", handleBeforeUnload)
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload)
+    }
+  }, [debouncedEmitTyping, selectedContactId])
+
   return (
     <div className="p-3 border-t border-slate-800">
-      <form onSubmit={handleSendMessage} className="flex items-center gap-2">
+      <form onSubmit={onSubmit} className="flex items-center gap-2">
         <div className="flex items-center gap-1">
           <TooltipProvider>
             <Tooltip>
@@ -78,13 +164,7 @@ export const MessageInput = ({
           <Input
             type="text"
             value={message}
-            onChange={(e) => {
-              setMessage(e.target.value)
-              // Emit typing event when user is typing
-              if (selectedContactId && e.target.value.trim()) {
-                debouncedEmitTyping(selectedContactId)
-              }
-            }}
+            onChange={handleInputChange}
             placeholder="Type a message..."
             className="pr-10 bg-slate-800 border-slate-700 text-white placeholder:text-slate-400"
           />

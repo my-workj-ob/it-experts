@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { useMobile } from "@/hooks/use-mobile"
 import { cn } from "@/lib/utils"
-import { Award, BarChart2, BookOpen, Briefcase, Calendar, ChevronDown, ChevronRight, Code, FileCode, FolderKanban, Home, Layers, LinkIcon, MessageSquare, Settings, Sparkles, Trophy, Users, Video } from 'lucide-react'
+import { Award, BookOpen, Briefcase, Calendar, ChevronDown, ChevronRight, Code, FileCode, FolderKanban, Home, Layers, LinkIcon, MessageSquare, Settings, Sparkles, Trophy, Users, Video } from 'lucide-react'
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useState } from "react"
@@ -73,13 +73,13 @@ export default function Sidebar() {
     //   active: pathname?.includes("/videos"),
     //   premium: false,
     // },
-    {
-      label: "Statistics",
-      icon: BarChart2,
-      href: "/statistics",
-      active: pathname === "/statistics",
-      premium: false,
-    },
+    // {
+    //   label: "Statistics",
+    //   icon: BarChart2,
+    //   href: "/statistics",
+    //   active: pathname === "/statistics",
+    //   premium: false,
+    // },
 
     {
       label: "Settings",

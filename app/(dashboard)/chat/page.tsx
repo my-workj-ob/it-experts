@@ -28,7 +28,6 @@ import { UserProfileCard } from "./components/user-profile-card"
 import { VoiceRecorder } from "./components/voice-recorder"
 import { WelcomeScreen } from "./components/welcome-screen"
 
-
 const messageAnimations = `
   @keyframes message-send {
     0% { transform: translateX(10px); opacity: 0; }
@@ -135,25 +134,13 @@ export default function ChatInterface({ initialReceiverId = null }: { initialRec
   })
 
   // Socket connection and handlers
-  const {
-    emitTyping,
-    sendMessage,
-    editMessage,
-    deleteMessage,
-    blockUser,
-    unblockUser,
-    markAsSpam,
-  } = useChatSocket({
+  const { emitTyping, sendMessage, editMessage, deleteMessage, blockUser, unblockUser, markAsSpam } = useChatSocket({
     currentUserId: currentUserId || 0,
     selectedContact,
     setOnlineUsers: (users) => {
-      // Update the local state first
       setOnlineUsersList(users)
-
-      // Then update last active times
       setLastActive((prev) => {
         const newLastActive = { ...prev }
-        // Check if users is an array before using forEach
         if (Array.isArray(users)) {
           users.forEach((userId) => {
             newLastActive[userId] = new Date().toISOString()
@@ -170,8 +157,6 @@ export default function ChatInterface({ initialReceiverId = null }: { initialRec
     getUnreadCounts,
   })
 
-
-
   // Check for mobile screen size on mount and resize
   useEffect(() => {
     checkMobile()
@@ -185,6 +170,14 @@ export default function ChatInterface({ initialReceiverId = null }: { initialRec
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [messages])
+
+  // Typing holatini qayta yuklashda tozalash
+  useEffect(() => {
+    setTypingUsers({}) // Sahifa yuklanganda typingUsersni tozalash
+    if (currentUserId && selectedContact?.id) {
+      emitTyping(selectedContact.id, false) // Oldingi typing hodisasini to'xtatish
+    }
+  }, [currentUserId, selectedContact?.id, emitTyping, setTypingUsers])
 
   // Handle sending a message
   const handleSendMessage = async (e: React.FormEvent) => {
@@ -306,6 +299,8 @@ export default function ChatInterface({ initialReceiverId = null }: { initialRec
         setMessages((prevMessages) =>
           prevMessages.map((msg) => (msg.id === tempId ? { ...response.message, isNew: true } : msg)),
         )
+        console.log(response);
+
       },
       () => {
         // Error callback
@@ -314,6 +309,8 @@ export default function ChatInterface({ initialReceiverId = null }: { initialRec
       },
     )
   }
+
+
 
   // Handle message edit
   const handleEditMessage = (messageId: number, newContent: string) => {
@@ -334,12 +331,8 @@ export default function ChatInterface({ initialReceiverId = null }: { initialRec
   // Handle block user
   const handleBlockUser = (userId: number) => {
     blockUser(userId, () => {
-      // Update user details to show they're blocked
       if (userDetails && userDetails.id === userId) {
-        setUserDetails({
-          ...userDetails,
-          isBlocked: true,
-        })
+        setUserDetails({ ...userDetails, isBlocked: true })
       }
     })
   }
@@ -347,12 +340,8 @@ export default function ChatInterface({ initialReceiverId = null }: { initialRec
   // Handle unblock user
   const handleUnblockUser = (userId: number) => {
     unblockUser(userId, () => {
-      // Update user details to show they're unblocked
       if (userDetails && userDetails.id === userId) {
-        setUserDetails({
-          ...userDetails,
-          isBlocked: false,
-        })
+        setUserDetails({ ...userDetails, isBlocked: false })
       }
     })
   }
@@ -360,25 +349,16 @@ export default function ChatInterface({ initialReceiverId = null }: { initialRec
   // Handle mark as spam
   const handleMarkAsSpam = (userId: number) => {
     markAsSpam(userId, () => {
-      // Update user details to show they're marked as spam
       if (userDetails && userDetails.id === userId) {
-        setUserDetails({
-          ...userDetails,
-          isSpam: true,
-        })
+        setUserDetails({ ...userDetails, isSpam: true })
       }
     })
   }
 
-
-
   return (
     <>
-      {/* Web Push Subscription Component */}
       <WebPushSubscription />
-      <style jsx global>
-        {messageAnimations}
-      </style>
+      <style jsx global>{messageAnimations}</style>
       <div
         className={cn(
           "h-[calc(100vh-15rem)] flex bg-slate-900 text-white rounded-lg border border-slate-800 overflow-hidden",
@@ -389,7 +369,6 @@ export default function ChatInterface({ initialReceiverId = null }: { initialRec
           currentTheme === "rose" && "border-rose-500/20",
         )}
       >
-        {/* Contacts sidebar */}
         {(showContacts || !isMobile) && (
           <ContactsSidebar
             showContacts={showContacts}
@@ -405,9 +384,7 @@ export default function ChatInterface({ initialReceiverId = null }: { initialRec
           />
         )}
 
-        {/* Chat area */}
         <div className="flex-1 flex flex-col bg-slate-900" ref={chatAreaRef}>
-          {/* Chat header */}
           {selectedContact ? (
             <>
               <ChatHeader
@@ -423,10 +400,8 @@ export default function ChatInterface({ initialReceiverId = null }: { initialRec
                 userDetails={userDetails}
               />
 
-              {/* User profile card (conditionally rendered) */}
               {showUserProfile && userDetails && <UserProfileCard user={userDetails} />}
 
-              {/* Message status bar */}
               <div className="px-4 py-2">
                 <MessageStatusBar
                   messageCount={messages.length}
@@ -437,7 +412,6 @@ export default function ChatInterface({ initialReceiverId = null }: { initialRec
                 />
               </div>
 
-              {/* Messages */}
               <div className="flex-1 overflow-auto p-4" onContextMenu={(e) => e.preventDefault()}>
                 <MessageList
                   isLoading={isLoading}
@@ -453,7 +427,6 @@ export default function ChatInterface({ initialReceiverId = null }: { initialRec
                 />
               </div>
 
-              {/* Selected files preview */}
               {selectedFiles.length > 0 && (
                 <div className="px-3 pt-3 space-y-2">
                   {selectedFiles.map((file, index) => (
@@ -469,7 +442,6 @@ export default function ChatInterface({ initialReceiverId = null }: { initialRec
                 </div>
               )}
 
-              {/* Message input */}
               <div className="p-3 border-t border-slate-800">
                 {isRecording ? (
                   <VoiceRecorder onComplete={handleRecordingComplete} onCancel={() => setIsRecording(false)} />
@@ -484,7 +456,6 @@ export default function ChatInterface({ initialReceiverId = null }: { initialRec
                     selectedContactId={selectedContact.id}
                     audioBlob={audioBlob}
                     handleEmojiSelect={handleEmojiSelect}
-
                   />
                 )}
               </div>
@@ -495,7 +466,6 @@ export default function ChatInterface({ initialReceiverId = null }: { initialRec
         </div>
       </div>
 
-      {/* Settings Modal */}
       {showSettingsModal && selectedContact && (
         <ChatSettingsModal
           user={selectedContact}
@@ -509,7 +479,6 @@ export default function ChatInterface({ initialReceiverId = null }: { initialRec
         />
       )}
 
-      {/* Message Context Menu */}
       {contextMenuPosition && selectedMessage && (
         <MessageContextMenu
           position={contextMenuPosition}
@@ -522,12 +491,9 @@ export default function ChatInterface({ initialReceiverId = null }: { initialRec
         />
       )}
 
-      {/* Theme Selector (floating button) */}
       <div className="absolute bottom-4 right-4">
         <ChatThemeSelector onSelectTheme={handleThemeChange} currentTheme={currentTheme} />
       </div>
     </>
   )
 }
-
-

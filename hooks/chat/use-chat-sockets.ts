@@ -1,6 +1,5 @@
 'use client';
 
-import { debounce } from '@/lib/chat-utils';
 import type { Message, User } from '@/types/chat';
 import { useCallback, useEffect, useRef } from 'react';
 import { io, type Socket } from 'socket.io-client';
@@ -47,7 +46,6 @@ export function useChatSocket({
 		if (socketInitialized.current || !currentUserId) return;
 
 		socketInitialized.current = true;
-		console.log('Initializing socket connection...');
 
 		// Connect to the Socket.io server
 		const socket = io('http://localhost:3030/chat', {
@@ -63,11 +61,9 @@ export function useChatSocket({
 
 		// Handle connection
 		socket.on('connect', () => {
-			console.log('Connected to socket server with ID:', socket.id);
-
 			// Join the user's chat room
 			socket.emit('joinChat', currentUserId, response => {
-				console.log('Join chat response:', response);
+				console.log('Join chat response:');
 			});
 
 			// Request the list of online users
@@ -79,7 +75,6 @@ export function useChatSocket({
 
 		// Handle connection error
 		socket.on('connect_error', error => {
-			console.error('Socket connection error:', error);
 			// Try to reconnect on error
 			setTimeout(() => {
 				socket.connect();
@@ -88,7 +83,6 @@ export function useChatSocket({
 
 		// Cleanup on unmount
 		return () => {
-			console.log('Disconnecting socket');
 			socket.disconnect();
 			socketInitialized.current = false;
 			eventHandlersInitialized.current = false;
@@ -106,17 +100,14 @@ export function useChatSocket({
 
 		const socket = socketRef.current;
 		eventHandlersInitialized.current = true;
-		console.log('Setting up socket event handlers...');
 
 		// Handle online users list
 		socket.on('onlineUsers', (onlineUserIds: number[]) => {
-			console.log('Online users:', onlineUserIds);
 			setOnlineUsers(onlineUserIds);
 		});
 
 		// Handle individual user coming online
 		socket.on('userOnline', (userId: number) => {
-			console.log('User came online:', userId);
 			setOnlineUsers(prev => {
 				if (prev.includes(userId)) return prev;
 				return [...prev, userId];
@@ -131,7 +122,6 @@ export function useChatSocket({
 
 		// Handle individual user going offline
 		socket.on('userOffline', (userId: number) => {
-			console.log('User went offline:', userId);
 			setOnlineUsers(prev => prev.filter(id => id !== userId));
 
 			// Update last active time
@@ -256,8 +246,6 @@ export function useChatSocket({
 		socket.on(
 			'messagesMarkedAsRead',
 			(data: { senderId: number; receiverId: number }) => {
-				console.log('Messages marked as read:', data);
-
 				// If we're the sender, update our messages to show they've been read
 				if (data.senderId === currentUserId) {
 					setMessages(prevMessages =>
@@ -288,19 +276,14 @@ export function useChatSocket({
 		// Handle unread counts update
 
 		// Handle typing indicator
-		socket.on('userTyping', (data: { senderId: number }) => {
-			const { senderId } = data;
-			console.log('User typing:', senderId);
-
-			setTypingUsers(prev => ({ ...prev, [senderId]: true }));
-
-			if (typingTimeoutsRef.current[senderId]) {
-				clearTimeout(typingTimeoutsRef.current[senderId]);
+		socket.on('userTyping', (data: { senderId: number; isTyping: boolean }) => {
+			const { senderId, isTyping } = data;
+			if (senderId === selectedContact?.id) {
+				setTypingUsers(prev => {
+					const updated = { ...prev, [senderId]: isTyping };
+					return updated;
+				});
 			}
-
-			typingTimeoutsRef.current[senderId] = setTimeout(() => {
-				setTypingUsers(prev => ({ ...prev, [senderId]: false }));
-			}, 2500);
 		});
 
 		// Handle message reactions
@@ -375,8 +358,6 @@ export function useChatSocket({
 
 		// Reconnection events
 		socket.on('reconnect', attemptNumber => {
-			console.log(`Reconnected after ${attemptNumber} attempts`);
-
 			// Rejoin chat room after reconnection
 			socket.emit('joinChat', currentUserId);
 			socket.emit('getOnlineUsers');
@@ -428,21 +409,19 @@ export function useChatSocket({
 			receiverId: currentUserId,
 		});
 	}, [selectedContact, currentUserId]);
-
-	// Typing indicator with debounce
 	const emitTyping = useCallback(
-		debounce((receiverId: number) => {
-			if (socketRef.current && currentUserId) {
-				socketRef.current.emit('typing', {
-					senderId: currentUserId,
-					receiverId: receiverId,
-				});
-			}
-		}, 100),
-		[currentUserId]
+		(selectedContactId: number, isTyping: boolean) => {
+			if (!socketRef.current || !currentUserId || !selectedContact?.id) return;
+
+			socketRef.current.emit('typing', {
+				senderId: currentUserId,
+				receiverId: selectedContactId,
+				isTyping, // isTyping holatini yuboramiz
+			});
+		},
+		[currentUserId, selectedContact]
 	);
 
-	// Send message function
 	const sendMessage = useCallback(
 		(
 			messageData: any,
@@ -454,12 +433,9 @@ export function useChatSocket({
 
 			try {
 				socketRef.current.emit('sendMessage', messageData, (response: any) => {
-					console.log('Message sent response:', response);
-
 					if (response && response.success && response.message) {
 						if (onSuccess) onSuccess(response);
 					} else {
-						console.error('Failed to send message:', response);
 						if (onError) onError();
 					}
 				});
@@ -471,7 +447,6 @@ export function useChatSocket({
 		[]
 	);
 
-	// Edit message function
 	const editMessage = useCallback(
 		(
 			messageId: number,

@@ -160,7 +160,7 @@ export default function Navbar() {
                   <DropdownMenuItem asChild>
                     <Link href="/portfolio">Portfolio</Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
+                  {/* <DropdownMenuItem asChild>
                     <Link href="/mentorship">Mentorship</Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
@@ -168,7 +168,7 @@ export default function Navbar() {
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link href="/jobs">Jobs</Link>
-                  </DropdownMenuItem>
+                  </DropdownMenuItem> */}
                   {/* <DropdownMenuItem asChild>
                     <Link href="/integrations">Integrations</Link>
                   </DropdownMenuItem> */}

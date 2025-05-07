@@ -2,17 +2,17 @@
 
 import type React from "react"
 
-import { useRef, useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Send, Bot, Sparkles, RefreshCw, ThumbsUp, ThumbsDown, Copy, User, Loader2 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { ScrollArea } from "@/components/ui/scroll-area"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { cn } from "@/lib/utils"
 import { toast } from "@/components/ui/use-toast"
+import { cn } from "@/lib/utils"
+import { Bot, Copy, Loader2, RefreshCw, Send, Sparkles, ThumbsDown, ThumbsUp, User } from "lucide-react"
+import { useEffect, useRef, useState } from "react"
 
 // Suggested prompts for the AI assistant
 const suggestedPrompts = [

@@ -30,7 +30,6 @@ export function useNotifications({ userId }: UseNotificationsProps) {
 		queryFn: async () => {
 			if (!userId) return [];
 			const response = await axiosInstance.get(`/notifications/user/devices`);
-			console.log('Notifications:', response.data);
 
 			return response.data;
 		},
@@ -134,7 +133,6 @@ export function useNotifications({ userId }: UseNotificationsProps) {
 		// Optional: Yuklash holatini kuzatish
 		onSettled: () => {
 			// Yuklash tugadi (success yoki error holatidan qat'iy nazar)
-			console.log('Web push subscription registration attempt finished');
 		},
 	});
 

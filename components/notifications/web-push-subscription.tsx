@@ -18,18 +18,16 @@ export function WebPushSubscription() {
     if ("serviceWorker" in navigator && "PushManager" in window) {
       // Service Worker faylini ro'yxatdan o'tkazish
       navigator.serviceWorker.register('/service-worker.js').then((registration) => {
-        console.log('Service Worker registered:', registration);
 
         registration.pushManager.getSubscription().then((subscription) => {
           if (subscription) {
-            console.log('Already subscribed:', subscription);
             registerWebPush(subscription); // Backendga yuborish
           } else {
             requestNotificationPermission(registration); // Yangi obuna qilish
           }
         });
       }).catch((error) => {
-        console.error('Service Worker registration failed:', error);
+        console.error(error);
       });
     } else {
       console.log("Push notifications not supported in this browser")
@@ -43,14 +41,12 @@ export function WebPushSubscription() {
         const vapidPublicKey = 'BC4yDDwdnwnMTh8nbwbcxjEj7Fasu_HzIcv_l7Opujo9_VVMoX0wwtMFX2CLcbqM4pfkKvO1puROcef4Tml8nIs';
 
         if (!vapidPublicKey) {
-          console.error("VAPID public key not found")
           return
         }
 
         // Base64 formatdagi VAPID public key ni Uint8Array ga o'girish
         const convertedVapidKey = urlBase64ToUint8Array(vapidPublicKey)
 
-        console.log(convertedVapidKey);
 
         // Obuna yaratish
         registration.pushManager
@@ -59,7 +55,6 @@ export function WebPushSubscription() {
             applicationServerKey: convertedVapidKey,
           })
           .then((subscription) => {
-            console.log("Subscribed:", subscription)
             // Obuna ma'lumotlarini backendga yuborish
             registerWebPush(subscription)
           })

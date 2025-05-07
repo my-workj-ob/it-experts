@@ -59,7 +59,6 @@ export function useChatData({ currentUserId, onlineUsers }: UseChatDataProps) {
 
 					setUserDetails(formattedUser);
 
-					// If we don't have a selected contact yet, use this user data
 					if (!selectedContact) {
 						setSelectedContact(formattedUser);
 					}
@@ -85,10 +84,9 @@ export function useChatData({ currentUserId, onlineUsers }: UseChatDataProps) {
 			setSelectedContact({
 				...contact,
 				online: isOnline,
-				unread: 0, // Reset unread count when selecting a contact
+				unread: 0,
 			});
 
-			// Fetch user details if we don't have them yet
 			if (!userDetails || userDetails.id !== contact.id) {
 				fetchUserDetails(contact.id);
 			}
@@ -349,6 +347,44 @@ export function useChatData({ currentUserId, onlineUsers }: UseChatDataProps) {
 		},
 	});
 
+	const blockUserMutation = useMutation({
+		mutationKey: ['block_user'],
+		mutationFn: async (blockedId: number) => {
+			const response = await axiosInstance.post(`/block`, { blockedId });
+			return response.data;
+		},
+		onSuccess: data => {
+			if (data.success) {
+				// Handle success, for example, show a notification or update the UI
+				console.log('User blocked successfully');
+			}
+		},
+		onError: error => {
+			// Handle error, for example, show an error notification
+			console.error('Error blocking user:', error);
+		},
+	});
+
+	const unblockUserMutation = useMutation({
+		mutationKey: ['un_block_user'],
+		mutationFn: async (blockedId: number) => {
+			const response = await axiosInstance.post(`/block/unblock`, {
+				blockedId,
+			});
+			return response.data;
+		},
+		onSuccess: data => {
+			if (data.success) {
+				// Handle success, for example, show a notification or update the UI
+				console.log('User blocked successfully');
+			}
+		},
+		onError: error => {
+			// Handle error, for example, show an error notification
+			console.error('Error blocking user:', error);
+		},
+	});
+
 	// Connection handlers
 	const handleAccept = useCallback(
 		(data: any) => {
@@ -382,6 +418,16 @@ export function useChatData({ currentUserId, onlineUsers }: UseChatDataProps) {
 		},
 		[removeConnection]
 	);
+
+	// Block user mutation
+
+	const handleBlockUser = (blockedId: number) => {
+		blockUserMutation.mutate(blockedId);
+	};
+
+	const handleUnblockUser = (blockedId: number) => {
+		unblockUserMutation.mutate(blockedId);
+	};
 
 	// Memoize filtered users list
 	const filteredUsers = useMemo(
@@ -435,6 +481,8 @@ export function useChatData({ currentUserId, onlineUsers }: UseChatDataProps) {
 		handleAccept,
 		handleRequest,
 		handleRemoveConnection,
+		handleBlockUser,
+		handleUnblockUser,
 
 		// Computed values
 		filteredUsers,
