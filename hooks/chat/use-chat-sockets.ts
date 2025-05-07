@@ -48,7 +48,7 @@ export function useChatSocket({
 		socketInitialized.current = true;
 
 		// Connect to the Socket.io server
-		const socket = io('http://localhost:3030/chat', {
+		const socket = io('https://tester-ajuz.onrender.com/chat', {
 			transports: ['websocket', 'polling'],
 			withCredentials: true,
 			forceNew: true,
