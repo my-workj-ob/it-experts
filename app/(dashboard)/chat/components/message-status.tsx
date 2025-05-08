@@ -57,7 +57,7 @@ export const MessageStatusBar = ({
 
       <div className="flex items-center gap-1 text-slate-400">
         <Send className="h-3 w-3" />
-        <span>{messageCount}</span>
+        <span>{messageCount}</span>s
       </div>
 
       {unreadCount > 0 && (

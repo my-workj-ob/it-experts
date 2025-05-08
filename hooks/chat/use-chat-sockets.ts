@@ -48,7 +48,7 @@ export function useChatSocket({
 		socketInitialized.current = true;
 
 		// Connect to the Socket.io server
-		const socket = io('https://tester-ajuz.onrender.com/chat', {
+		const socket = io('http://localhost:3030/chat', {
 			transports: ['websocket', 'polling'],
 			withCredentials: true,
 			forceNew: true,
@@ -433,9 +433,12 @@ export function useChatSocket({
 
 			try {
 				socketRef.current.emit('sendMessage', messageData, (response: any) => {
+					console.log('Message sent response:', response);
+
 					if (response && response.success && response.message) {
 						if (onSuccess) onSuccess(response);
 					} else {
+						console.error('Failed to send message:', response);
 						if (onError) onError();
 					}
 				});

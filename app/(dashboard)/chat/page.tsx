@@ -299,13 +299,10 @@ export default function ChatInterface({ initialReceiverId = null }: { initialRec
         setMessages((prevMessages) =>
           prevMessages.map((msg) => (msg.id === tempId ? { ...response.message, isNew: true } : msg)),
         )
-        console.log(response);
-
       },
       () => {
         // Error callback
         setMessages((prev) => prev.filter((msg) => msg.id !== tempId))
-        alert("Failed to send message. Please try again.")
       },
     )
   }

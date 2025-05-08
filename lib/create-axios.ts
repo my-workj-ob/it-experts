@@ -20,6 +20,7 @@ export const axiosInstance = axios.create({
 	headers: {
 		'Content-Type': 'application/json',
 	},
+	withCredentials: true,
 });
 
 // Request interceptor (har bir so‘rov oldidan token qo‘shish)
@@ -73,12 +74,12 @@ axiosInstance.interceptors.response.use(
 				console.warn(
 					'Refresh token ishlamadi, foydalanuvchi tashqariga chiqarildi.'
 				);
-				localStorage.removeItem('accessToken');
-				localStorage.removeItem('refreshToken');
+				// localStorage.removeItem('accessToken');
+				// localStorage.removeItem('refreshToken');
 
 				// **Agar hozir login sahifasida bo‘lsa, yana /login sahifasiga yo‘naltirmaymiz**
 				if (window.location.pathname !== '/login') {
-					window.location.href = '/login';
+					// window.location.href = '/login';
 				}
 
 				return Promise.reject(refreshError);
