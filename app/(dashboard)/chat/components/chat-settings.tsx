@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -8,63 +8,61 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
-import { Separator } from "@/components/ui/separator"
-import { Switch } from "@/components/ui/switch"
-import { AlertTriangle, Bell, BellOff, Flag, ShieldAlert, Volume2, VolumeX } from "lucide-react"
-import React from "react"
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import { Switch } from "@/components/ui/switch";
+import {
+  AlertTriangle,
+  Bell,
+  BellOff,
+  Flag,
+  ShieldAlert,
+  Volume2,
+  VolumeX,
+} from "lucide-react";
+import React from "react";
 
 interface User {
-  id: number
+  id: number;
   profile: {
-    firstName: string
-    lastName?: string
-    avatar: string
-  }
-  email: string
-  isBlocked?: boolean
-  isSpam?: boolean
+    firstName: string;
+    lastName?: string;
+    avatar: string;
+  };
+  email: string;
+  isBlocked?: boolean;
+  isSpam?: boolean;
 }
 
 interface ChatSettingsModalProps {
-  user: User
-  isOpen: boolean
-  onClose: () => void
-  onBlock: () => void
-  onUnblock: () => void
-  onMarkAsSpam: () => void
-  isBlocked: boolean
-  isSpam: boolean
+  user: User;
+  isOpen: boolean;
 }
 
-export const ChatSettingsModal = ({
-  user,
-  isOpen,
-  onClose,
-  onBlock,
-  onUnblock,
-  onMarkAsSpam,
-  isBlocked,
-  isSpam,
-}: ChatSettingsModalProps) => {
-  const [notifications, setNotifications] = React.useState(true)
-  const [sounds, setSounds] = React.useState(true)
-  const [mediaAutoDownload, setMediaAutoDownload] = React.useState(true)
+export const ChatSettingsModal = ({ user, isOpen }: ChatSettingsModalProps) => {
+  const [notifications, setNotifications] = React.useState(true);
+  const [sounds, setSounds] = React.useState(true);
+  const [mediaAutoDownload, setMediaAutoDownload] = React.useState(true);
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen}>
       <DialogContent className="bg-slate-900 border-slate-800 text-white">
         <DialogHeader>
-          <DialogTitle className="text-white flex items-center gap-2">Chat Settings</DialogTitle>
+          <DialogTitle className="text-white flex items-center gap-2">
+            Chat Settings
+          </DialogTitle>
           <DialogDescription>
-            Configure your chat settings with {user.profile.firstName} {user.profile.lastName}
+            Configure your chat settings with {user.profile.firstName}{" "}
+            {user.profile.lastName}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-2">
           <div className="space-y-2">
-            <h3 className="text-sm font-medium text-slate-300">Notifications</h3>
+            <h3 className="text-sm font-medium text-slate-300">
+              Notifications
+            </h3>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 {notifications ? (
@@ -72,11 +70,18 @@ export const ChatSettingsModal = ({
                 ) : (
                   <BellOff className="h-4 w-4 text-slate-500" />
                 )}
-                <Label htmlFor="notifications" className="text-sm text-slate-300">
+                <Label
+                  htmlFor="notifications"
+                  className="text-sm text-slate-300"
+                >
                   Enable notifications
                 </Label>
               </div>
-              <Switch id="notifications" checked={notifications} onCheckedChange={setNotifications} />
+              <Switch
+                id="notifications"
+                checked={notifications}
+                onCheckedChange={setNotifications}
+              />
             </div>
 
             <div className="flex items-center justify-between">
@@ -90,16 +95,27 @@ export const ChatSettingsModal = ({
                   Message sounds
                 </Label>
               </div>
-              <Switch id="sounds" checked={sounds} onCheckedChange={setSounds} />
+              <Switch
+                id="sounds"
+                checked={sounds}
+                onCheckedChange={setSounds}
+              />
             </div>
 
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Label htmlFor="media-download" className="text-sm text-slate-300">
+                <Label
+                  htmlFor="media-download"
+                  className="text-sm text-slate-300"
+                >
                   Auto-download media
                 </Label>
               </div>
-              <Switch id="media-download" checked={mediaAutoDownload} onCheckedChange={setMediaAutoDownload} />
+              <Switch
+                id="media-download"
+                checked={mediaAutoDownload}
+                onCheckedChange={setMediaAutoDownload}
+              />
             </div>
           </div>
 
@@ -120,8 +136,11 @@ export const ChatSettingsModal = ({
                 <Button
                   variant={isBlocked ? "destructive" : "outline"}
                   size="sm"
-                  onClick={isBlocked ? onUnblock : onBlock}
-                  className={isBlocked ? "bg-red-500 hover:bg-red-600" : "border-slate-700 text-slate-300"}
+                  className={
+                    isBlocked
+                      ? "bg-red-500 hover:bg-red-600"
+                      : "border-slate-700 text-slate-300"
+                  }
                 >
                   {isBlocked ? "Unblock" : "Block"}
                 </Button>
@@ -135,7 +154,6 @@ export const ChatSettingsModal = ({
                 <Button
                   variant={isSpam ? "destructive" : "outline"}
                   size="sm"
-                  onClick={onMarkAsSpam}
                   disabled={isSpam}
                   className={
                     isSpam
@@ -149,12 +167,15 @@ export const ChatSettingsModal = ({
             </div>
 
             {isBlocked && (
-              <p className="text-xs text-red-400 mt-1">You've blocked this user. You won't receive their messages.</p>
+              <p className="text-xs text-red-400 mt-1">
+                You've blocked this user. You won't receive their messages.
+              </p>
             )}
 
             {isSpam && (
               <p className="text-xs text-yellow-400 mt-1">
-                You've reported this user as spam. Our team will review this case.
+                You've reported this user as spam. Our team will review this
+                case.
               </p>
             )}
           </div>
@@ -163,7 +184,6 @@ export const ChatSettingsModal = ({
         <DialogFooter>
           <Button
             variant="ghost"
-            onClick={onClose}
             className="border border-slate-700 hover:bg-slate-800 text-slate-300"
           >
             Close
@@ -171,5 +191,5 @@ export const ChatSettingsModal = ({
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
-}
+  );
+};

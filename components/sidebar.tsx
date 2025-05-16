@@ -1,26 +1,44 @@
-"use client"
+"use client";
 
-import { Button } from "@/components/ui/button"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { useMobile } from "@/hooks/use-mobile"
-import { cn } from "@/lib/utils"
-import { Award, BookOpen, Briefcase, Calendar, ChevronDown, ChevronRight, Code, FileCode, FolderKanban, Home, Layers, LinkIcon, MessageSquare, Settings, Sparkles, Trophy, Users, Video } from 'lucide-react'
-import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { useState } from "react"
+import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { useMobile } from "@/hooks/use-mobile";
+import { cn } from "@/lib/utils";
+import {
+  Award,
+  BookOpen,
+  Briefcase,
+  ChevronDown,
+  ChevronRight,
+  Code,
+  FileCode,
+  FolderKanban,
+  Home,
+  Layers,
+  LinkIcon,
+  MessageSquare,
+  Settings,
+  Sparkles,
+  Trophy,
+  Users,
+  Video,
+} from "lucide-react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useState } from "react";
 
 export default function Sidebar() {
-  const pathname = usePathname()
-  const isMobile = useMobile()
+  const pathname = usePathname();
+  const isMobile = useMobile();
   const [expandedSections, setExpandedSections] = useState({
     main: true,
     premium: false,
-  })
-  const [hoveredItem, setHoveredItem] = useState<string | null>(null)
+  });
+  const [hoveredItem, setHoveredItem] = useState<string | null>(null);
 
   // Don't render sidebar on landing page
   if (pathname === "/" || pathname === "/login" || pathname === "/register") {
-    return null
+    return null;
   }
 
   const mainRoutes = [
@@ -45,13 +63,13 @@ export default function Sidebar() {
       active: pathname?.includes("/chat"),
       premium: false,
     },
-    {
-      label: "Events",
-      icon: Calendar,
-      href: "/events",
-      active: pathname?.includes("/events"),
-      premium: false,
-    },
+    // {
+    //   label: "Events",
+    //   icon: Calendar,
+    //   href: "/events",
+    //   active: pathname?.includes("/events"),
+    //   premium: false,
+    // },
     // {
     //   label: "Find a Team",
     //   icon: Search,
@@ -88,7 +106,7 @@ export default function Sidebar() {
       active: pathname === "/settings",
       premium: false,
     },
-  ]
+  ];
 
   const premiumRoutes = [
     {
@@ -182,14 +200,14 @@ export default function Sidebar() {
       active: pathname?.includes("/hackathons"),
       premium: true,
     },
-  ]
+  ];
 
-  const toggleSection = (section: string) => {
+  const toggleSection = (section: keyof typeof expandedSections) => {
     setExpandedSections((prev) => ({
       ...prev,
       [section]: !prev[section],
-    }))
-  }
+    }));
+  };
 
   if (isMobile) {
     return (
@@ -201,29 +219,40 @@ export default function Sidebar() {
               className={cn(
                 "flex flex-col h-14 w-14 items-center justify-center rounded-lg gap-1 p-0 transition-all duration-300",
                 route.active &&
-                "bg-gradient-to-r from-amber-50/20 via-amber-100/30 to-amber-50/20 dark:from-amber-900/30 dark:via-amber-800/40 dark:to-amber-900/30 shadow-[0_0_10px_rgba(251,191,36,0.2)]",
+                  "bg-gradient-to-r from-amber-50/20 via-amber-100/30 to-amber-50/20 dark:from-amber-900/30 dark:via-amber-800/40 dark:to-amber-900/30 shadow-[0_0_10px_rgba(251,191,36,0.2)]"
               )}
             >
-              <div className={cn(
-                "relative flex items-center justify-center",
-                route.active && "after:absolute after:w-6 after:h-6 after:rounded-full after:bg-amber-400/10 after:animate-ping after:duration-1000"
-              )}>
-                <route.icon className={cn(
-                  "h-5 w-5 transition-all duration-300",
-                  route.active ? "text-amber-600 dark:text-amber-400 scale-110" : "text-gray-500 dark:text-gray-400"
-                )} />
+              <div
+                className={cn(
+                  "relative flex items-center justify-center",
+                  route.active &&
+                    "after:absolute after:w-6 after:h-6 after:rounded-full after:bg-amber-400/10 after:animate-ping after:duration-1000"
+                )}
+              >
+                <route.icon
+                  className={cn(
+                    "h-5 w-5 transition-all duration-300",
+                    route.active
+                      ? "text-amber-600 dark:text-amber-400 scale-110"
+                      : "text-gray-500 dark:text-gray-400"
+                  )}
+                />
               </div>
-              <span className={cn(
-                "text-xs transition-all duration-300",
-                route.active ? "text-amber-600 dark:text-amber-400 font-medium" : "text-gray-500 dark:text-gray-400"
-              )}>
+              <span
+                className={cn(
+                  "text-xs transition-all duration-300",
+                  route.active
+                    ? "text-amber-600 dark:text-amber-400 font-medium"
+                    : "text-gray-500 dark:text-gray-400"
+                )}
+              >
                 {route.label}
               </span>
             </Button>
           </Link>
         ))}
       </div>
-    )
+    );
   }
 
   return (
@@ -239,7 +268,9 @@ export default function Sidebar() {
           >
             <div className="flex items-center gap-2">
               <div className="h-1 w-1 rounded-full bg-amber-500 dark:bg-amber-400 group-hover:scale-125 transition-all duration-300"></div>
-              <span className="font-semibold text-sm text-amber-700 dark:text-amber-300 tracking-wider">MAIN NAVIGATION</span>
+              <span className="font-semibold text-sm text-amber-700 dark:text-amber-300 tracking-wider">
+                MAIN NAVIGATION
+              </span>
             </div>
             {expandedSections.main ? (
               <ChevronDown className="h-4 w-4 text-amber-600 dark:text-amber-400 group-hover:text-amber-500 dark:group-hover:text-amber-300 transition-all duration-300" />
@@ -266,7 +297,9 @@ export default function Sidebar() {
                       route.active
                         ? "bg-gradient-to-r from-amber-50/30 via-amber-100/40 to-amber-50/30 dark:from-amber-900/40 dark:via-amber-800/50 dark:to-amber-900/40 dark:text-white border-l-2 border-amber-500 dark:border-amber-400 shadow-[0_2px_10px_rgba(251,191,36,0.15)]"
                         : "hover:bg-amber-50/10 dark:hover:bg-amber-900/20",
-                      hoveredItem === route.href && !route.active && "border-l-2 border-amber-300/50 dark:border-amber-700/50"
+                      hoveredItem === route.href &&
+                        !route.active &&
+                        "border-l-2 border-amber-300/50 dark:border-amber-700/50"
                     )}
                   >
                     {route.active && (
@@ -278,8 +311,8 @@ export default function Sidebar() {
                         route.active
                           ? "bg-gradient-to-br from-amber-400/20 via-amber-500/20 to-amber-600/20 dark:from-amber-400/30 dark:via-amber-500/20 dark:to-amber-600/30 shadow-[0_0_10px_rgba(251,191,36,0.2)] dark:shadow-[0_0_10px_rgba(251,191,36,0.1)]"
                           : hoveredItem === route.href
-                            ? "bg-gradient-to-br from-amber-100/10 via-amber-200/10 to-amber-300/10 dark:from-amber-700/20 dark:via-amber-800/20 dark:to-amber-900/20"
-                            : "bg-gradient-to-br from-gray-100 to-gray-200/50 dark:from-gray-800/30 dark:to-gray-700/30",
+                          ? "bg-gradient-to-br from-amber-100/10 via-amber-200/10 to-amber-300/10 dark:from-amber-700/20 dark:via-amber-800/20 dark:to-amber-900/20"
+                          : "bg-gradient-to-br from-gray-100 to-gray-200/50 dark:from-gray-800/30 dark:to-gray-700/30"
                       )}
                     >
                       <route.icon
@@ -288,8 +321,8 @@ export default function Sidebar() {
                           route.active
                             ? "text-amber-600 dark:text-amber-400"
                             : hoveredItem === route.href
-                              ? "text-amber-500 dark:text-amber-400"
-                              : "text-gray-500 dark:text-gray-400",
+                            ? "text-amber-500 dark:text-amber-400"
+                            : "text-gray-500 dark:text-gray-400"
                         )}
                       />
                     </div>
@@ -299,8 +332,8 @@ export default function Sidebar() {
                         route.active
                           ? "text-amber-700 dark:text-amber-300"
                           : hoveredItem === route.href
-                            ? "text-amber-600 dark:text-amber-400"
-                            : "text-gray-600 dark:text-gray-300 font-normal"
+                          ? "text-amber-600 dark:text-amber-400"
+                          : "text-gray-600 dark:text-gray-300 font-normal"
                       )}
                     >
                       {route.label}
@@ -401,5 +434,5 @@ export default function Sidebar() {
         </nav>
       </ScrollArea>
     </div>
-  )
+  );
 }

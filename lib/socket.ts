@@ -4,7 +4,7 @@ let socket: Socket | null = null;
 
 if (typeof window !== 'undefined') {
 	const token = localStorage.getItem('accessToken');
-	socket = io('http://localhost:3030/notifications', {
+	socket = io('http://localhost:8888/notifications', {
 		auth: {
 			token,
 		},

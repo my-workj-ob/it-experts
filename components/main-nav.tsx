@@ -1,11 +1,11 @@
-import Link from "next/link"
+import Link from "next/link";
 
-import { siteConfig } from "@/config/site"
-import { cn } from "@/lib/utils"
-import type { MainNavItem } from "@/types"
+import { siteConfig } from "@/config/site";
+import { cn } from "@/lib/utils";
+import type { MainNavItem } from "@/types";
 
 interface MainNavProps {
-  items?: MainNavItem[]
+  items?: MainNavItem[];
 }
 
 export function MainNav({ items }: MainNavProps) {
@@ -24,16 +24,15 @@ export function MainNav({ items }: MainNavProps) {
                   href={item.href}
                   className={cn(
                     "flex items-center text-sm font-medium text-foreground",
-                    item.disabled && "opacity-50 pointer-events-none",
+                    item.disabled && "opacity-50 pointer-events-none"
                   )}
                 >
                   {item.title}
                 </Link>
-              ),
+              )
           )}
         </nav>
       ) : null}
     </div>
-  )
+  );
 }
-

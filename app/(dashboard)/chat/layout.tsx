@@ -1,31 +1,29 @@
-"use client"
+"use client";
 
-import { Button } from "@/components/ui/button"
-import { useMobile } from "@/hooks/use-mobile"
-import { MessageSquare } from "lucide-react"
-import type React from "react"
-import { useState } from "react"
+import { Button } from "@/components/ui/button";
+import { useMobile } from "@/hooks/use-mobile";
+import { MessageSquare } from "lucide-react";
+import type React from "react";
+import { useState } from "react";
 
 export default function ChatLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
-  const isMobile = useMobile()
-  const [showSidebar, setShowSidebar] = useState(!isMobile)
+  const isMobile = useMobile();
+  const [showSidebar, setShowSidebar] = useState(!isMobile);
 
   const toggleSidebar = () => {
-    setShowSidebar(!showSidebar)
-  }
+    setShowSidebar(!showSidebar);
+  };
 
   return (
-    <div className="h-[calc(100vh-100rem)] flex bg-background">
+    <div className=" flex bg-background">
       {/* Sidebar */}
 
-
       {/* Main content */}
-      <div className="flex-1 relative">
-
+      <div className="flex-1 relative  w-full">
         {isMobile && !showSidebar && (
           <Button
             variant="outline"
@@ -40,5 +38,5 @@ export default function ChatLayout({
         {children}
       </div>
     </div>
-  )
+  );
 }

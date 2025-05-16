@@ -41,7 +41,7 @@ function useCustomChat() {
   const [input, setInput] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState(null)
-  const abortControllerRef = useRef(null)
+  const abortControllerRef = useRef<AbortController | null>(null)
 
   const handleInputChange = (e) => {
     setInput(e.target.value)
@@ -51,7 +51,7 @@ function useCustomChat() {
     e.preventDefault()
     if (!input.trim() || isLoading) return
 
-    // Add user message to the chat
+    
     const userMessage = {
       id: Date.now().toString(),
       role: "user",

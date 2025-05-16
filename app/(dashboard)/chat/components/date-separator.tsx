@@ -1,12 +1,18 @@
-import { formatMessageDate } from "./../../../../lib/chat-utils"
+import type React from "react"
+import { formatMessageDate } from "@/lib/chat-utils"
 
-// Date separator component
-export const DateSeparator = ({ date }: { date: string }) => {
+interface DateSeparatorProps {
+  date: string
+}
+
+export const DateSeparator: React.FC<DateSeparatorProps> = ({ date }) => {
   const formattedDate = formatMessageDate(date)
 
   return (
-    <div className="flex justify-center my-4">
-      <div className="bg-slate-800 px-3 py-1 rounded-full text-xs text-slate-400 animate-fade-in">{formattedDate}</div>
+    <div className="flex items-center justify-center my-4">
+      <div className="bg-slate-700 text-xs text-slate-300 px-3 py-1 rounded-full">{formattedDate}</div>
     </div>
   )
 }
+
+export default DateSeparator

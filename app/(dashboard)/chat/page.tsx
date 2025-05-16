@@ -1,32 +1,32 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import useProfile from "@/hooks/profile/use-profile"
-import { cn } from "@/lib/utils"
-import { get } from "lodash"
-import { useParams, useSearchParams } from "next/navigation"
-import { useEffect, useState } from "react"
+import useProfile from "@/hooks/profile/use-profile";
+import { cn } from "@/lib/utils";
+import { get } from "lodash";
+import { useParams, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 
 // Import custom hooks
-import { useChatData } from "@/hooks/chat/use-chat-data"
-import { useChatSocket } from "@/hooks/chat/use-chat-sockets"
-import { useChatUI } from "@/lib/use-chat-ui"
+import { useChatData } from "@/hooks/chat/use-chat-data";
+import { useChatSocket } from "@/hooks/chat/use-chat-sockets";
+import { useChatUI } from "@/lib/use-chat-ui";
 
 // Import components
-import { WebPushSubscription } from "@/components/notifications/web-push-subscription"
-import { ChatHeader } from "./components/chat-header"
-import { ChatSettingsModal } from "./components/chat-settings"
-import { ChatThemeSelector } from "./components/chat-theme-selector"
-import { ContactsSidebar } from "./components/contact-sidebar"
-import { FilePreview } from "./components/file-preview"
-import { MessageContextMenu } from "./components/message-context-menu"
-import { MessageInput } from "./components/message-input"
-import { MessageList } from "./components/message-list"
-import { MessageStatusBar } from "./components/message-status"
-import { UserProfileCard } from "./components/user-profile-card"
-import { VoiceRecorder } from "./components/voice-recorder"
-import { WelcomeScreen } from "./components/welcome-screen"
+import { WebPushSubscription } from "@/components/notifications/web-push-subscription";
+import { ChatHeader } from "./components/chat-header";
+import { ChatSettingsModal } from "./components/chat-settings";
+import { ChatThemeSelector } from "./components/chat-theme-selector";
+import { ContactsSidebar } from "./components/contact-sidebar";
+import { FilePreview } from "./components/file-preview";
+import { MessageContextMenu } from "./components/message-context-menu";
+import { MessageInput } from "./components/message-input";
+import { MessageList } from "./components/message-list";
+import { MessageStatusBar } from "./components/message-status";
+import { UserProfileCard } from "./components/user-profile-card";
+import { VoiceRecorder } from "./components/voice-recorder";
+import { WelcomeScreen } from "./components/welcome-screen";
 
 const messageAnimations = `
   @keyframes message-send {
@@ -49,17 +49,14 @@ const messageAnimations = `
     0% { opacity: 0; }
     100% { opacity: 1; }
   }
-`
+`;
 
-export default function ChatInterface({ initialReceiverId = null }: { initialReceiverId?: string | null }) {
+export default function ChatInterface() {
   // Hooks
-  const { userProfileData } = useProfile()
-  const searchParams = useSearchParams()
-  const params = useParams()
-  const currentUserId = get(userProfileData, "id")
+  const { userProfileData } = useProfile();
+  const currentUserId = get(userProfileData, "id");
 
   // URL parameters
-  const urlReceiverId = searchParams.get("receiverId") || params?.id
 
   // UI state and handlers
   const {
@@ -75,17 +72,13 @@ export default function ChatInterface({ initialReceiverId = null }: { initialRec
     selectedFiles,
     uploadProgress,
     uploadErrors,
-    messageReactions,
     currentTheme,
     typingUsers,
     messagesEndRef,
     chatAreaRef,
     messagesStartRef,
     setMessage,
-    setShowContacts,
-    setShowUserProfile,
     setIsRecording,
-    setShowSettingsModal,
     setAudioBlob,
     setTypingUsers,
     setMessageReactions,
@@ -101,22 +94,19 @@ export default function ChatInterface({ initialReceiverId = null }: { initialRec
     handleRemoveFile,
     handleAttachment,
     handleThemeChange,
-  } = useChatUI()
+  } = useChatUI();
 
   // Chat data state and handlers
-  const [onlineUsersList, setOnlineUsersList] = useState<number[]>([])
+  const [onlineUsersList, setOnlineUsersList] = useState<number[]>([]);
 
   const {
     selectedContact,
     userDetails,
     messages,
-    users,
     isLoading,
     isLoadingMore,
     lastActive,
     searchQuery,
-    setSelectedContact,
-    setUserDetails,
     setMessages,
     setUsers,
     setLastActive,
@@ -131,89 +121,84 @@ export default function ChatInterface({ initialReceiverId = null }: { initialRec
   } = useChatData({
     currentUserId,
     onlineUsers: onlineUsersList,
-  })
+  });
 
   // Socket connection and handlers
-  const { emitTyping, sendMessage, editMessage, deleteMessage, blockUser, unblockUser, markAsSpam } = useChatSocket({
-    currentUserId: currentUserId || 0,
-    selectedContact,
-    setOnlineUsers: (users) => {
-      setOnlineUsersList(users)
-      setLastActive((prev) => {
-        const newLastActive = { ...prev }
-        if (Array.isArray(users)) {
-          users.forEach((userId) => {
-            newLastActive[userId] = new Date().toISOString()
-          })
-        }
-        return newLastActive
-      })
-    },
-    setTypingUsers,
-    setLastActive,
-    setMessages,
-    setUsers,
-    setMessageReactions,
-    getUnreadCounts,
-  })
+  const { emitTyping, sendMessage, editMessage, deleteMessage } = useChatSocket(
+    {
+      currentUserId: currentUserId || 0,
+      selectedContact,
+      setOnlineUsers: setOnlineUsersList,
+      setTypingUsers,
+      setLastActive,
+      setMessages,
+      setUsers,
+      setMessageReactions,
+      getUnreadCounts,
+    }
+  );
 
   // Check for mobile screen size on mount and resize
   useEffect(() => {
-    checkMobile()
-    window.addEventListener("resize", checkMobile)
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
     return () => {
-      window.removeEventListener("resize", checkMobile)
-    }
-  }, [checkMobile])
+      window.removeEventListener("resize", checkMobile);
+    };
+  }, [checkMobile]);
 
   // Scroll to bottom when messages change
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
-  }, [messages])
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
   // Typing holatini qayta yuklashda tozalash
   useEffect(() => {
-    setTypingUsers({}) // Sahifa yuklanganda typingUsersni tozalash
+    setTypingUsers({}); // Sahifa yuklanganda typingUsersni tozalash
     if (currentUserId && selectedContact?.id) {
-      emitTyping(selectedContact.id, false) // Oldingi typing hodisasini to'xtatish
+      emitTyping(selectedContact.id, false); // Oldingi typing hodisasini to'xtatish
     }
-  }, [currentUserId, selectedContact?.id, emitTyping, setTypingUsers])
+  }, [currentUserId, selectedContact?.id, emitTyping, setTypingUsers]);
 
   // Handle sending a message
   const handleSendMessage = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     // Check if the message is empty or if no contact is selected
 
-    if ((!message.trim() && !audioBlob && selectedFiles.length === 0) || !selectedContact || !currentUserId) {
-      return
+    if (
+      (!message.trim() && !audioBlob && selectedFiles.length === 0) ||
+      !selectedContact ||
+      !currentUserId
+    ) {
+      return;
     }
 
     // Determine if this is a text, audio, or file message
-    const isAudioMessage = !!audioBlob
-    const hasAttachments = selectedFiles.length > 0
-    let messageContent = message.trim()
-    let audioUrl = ""
-    let fileUrls: string[] = []
+    const isAudioMessage = !!audioBlob;
+    const hasAttachments = selectedFiles.length > 0;
+    let messageContent = message.trim();
+    let audioUrl = "";
+    let fileUrls: string[] = [];
 
     // If it's an audio message, upload the audio file
     if (isAudioMessage) {
       try {
         // Create a FormData object to send the audio file
-        const formData = new FormData()
-        formData.append("audio", audioBlob)
+        const formData = new FormData();
+        formData.append("audio", audioBlob);
 
         // Upload the audio file to your server
         const response = await fetch("/api/upload-audio", {
           method: "POST",
           body: formData,
-        })
-        const data = await response.json()
-        audioUrl = data.url
-        messageContent = "🎤 Voice message" // Placeholder text for voice messages
+        });
+        const data = await response.json();
+        audioUrl = data.url;
+        messageContent = "🎤 Voice message"; // Placeholder text for voice messages
       } catch (error) {
-        console.error("Error uploading audio:", error)
-        alert("Failed to upload voice message. Please try again.")
-        return
+        console.error("Error uploading audio:", error);
+        alert("Failed to upload voice message. Please try again.");
+        return;
       }
     }
 
@@ -222,29 +207,31 @@ export default function ChatInterface({ initialReceiverId = null }: { initialRec
       try {
         // Upload each file and track progress
         const uploadPromises = selectedFiles.map(async (file) => {
-          const formData = new FormData()
-          formData.append("file", file)
+          const formData = new FormData();
+          formData.append("file", file);
 
           // Create upload request
           const response = await fetch("/api/upload-file", {
             method: "POST",
             body: formData,
-          })
-          const data = await response.json()
-          return data.url
-        })
+          });
+          const data = await response.json();
+          return data.url;
+        });
 
         // Wait for all uploads to complete
-        fileUrls = await Promise.all(uploadPromises)
+        fileUrls = await Promise.all(uploadPromises);
 
         // Add file info to message if it's the only content
         if (!messageContent) {
-          messageContent = `📎 ${selectedFiles.length} file${selectedFiles.length > 1 ? "s" : ""} attached`
+          messageContent = `📎 ${selectedFiles.length} file${
+            selectedFiles.length > 1 ? "s" : ""
+          } attached`;
         }
       } catch (error) {
-        console.error("Error uploading files:", error)
-        alert("Failed to upload one or more files. Please try again.")
-        return
+        console.error("Error uploading files:", error);
+        alert("Failed to upload one or more files. Please try again.");
+        return;
       }
     }
 
@@ -254,10 +241,10 @@ export default function ChatInterface({ initialReceiverId = null }: { initialRec
       message: messageContent,
       audioUrl: audioUrl,
       fileUrls: fileUrls,
-    }
+    };
 
     // Create temporary message (for optimistic UI update)
-    const tempId = Date.now() // Timestamp ID - this will be a very large number
+    const tempId = Date.now(); // Timestamp ID - this will be a very large number
 
     const tempMessage = {
       id: tempId,
@@ -275,20 +262,24 @@ export default function ChatInterface({ initialReceiverId = null }: { initialRec
       isNew: true, // Mark as new for animation
       audioUrl: audioUrl, // Add audio URL if it's a voice message
       fileUrls: fileUrls, // Add file URLs if there are attachments
-    }
+    };
 
     // Add temporary message to UI
-    setMessages((prev) => [...prev, tempMessage])
+    setMessages((prev) => [...prev, tempMessage]);
 
     // Update last message in contacts list
     setUsers((prevUsers) =>
-      prevUsers.map((user) => (user.id === selectedContact.id ? { ...user, lastMessage: messageContent } : user)),
-    )
+      prevUsers.map((user) =>
+        user.id === selectedContact.id
+          ? { ...user, lastMessage: messageContent }
+          : user
+      )
+    );
 
     // Clear input field, audio blob, and selected files
-    setMessage("")
-    setAudioBlob(null)
-    setIsRecording(false)
+    setMessage("");
+    setAudioBlob(null);
+    setIsRecording(false);
 
     // Send message via socket
     sendMessage(
@@ -297,65 +288,44 @@ export default function ChatInterface({ initialReceiverId = null }: { initialRec
       (response) => {
         // Success callback
         setMessages((prevMessages) =>
-          prevMessages.map((msg) => (msg.id === tempId ? { ...response.message, isNew: true } : msg)),
-        )
+          prevMessages.map((msg) =>
+            msg.id === tempId ? { ...response.message, isNew: true } : msg
+          )
+        );
       },
       () => {
         // Error callback
-        setMessages((prev) => prev.filter((msg) => msg.id !== tempId))
-      },
-    )
-  }
-
-
+        setMessages((prev) => prev.filter((msg) => msg.id !== tempId));
+      }
+    );
+  };
 
   // Handle message edit
   const handleEditMessage = (messageId: number, newContent: string) => {
     editMessage(messageId, newContent, () => {
-      setMessages((prev) => prev.map((msg) => (msg.id === messageId ? { ...msg, message: newContent } : msg)))
-    })
-    closeContextMenu()
-  }
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === messageId ? { ...msg, message: newContent } : msg
+        )
+      );
+    });
+    closeContextMenu();
+  };
 
   // Handle message delete
   const handleDeleteMessage = (messageId: number) => {
     deleteMessage(messageId, () => {
-      setMessages((prev) => prev.filter((msg) => msg.id !== messageId))
-    })
-    closeContextMenu()
-  }
-
-  // Handle block user
-  const handleBlockUser = (userId: number) => {
-    blockUser(userId, () => {
-      if (userDetails && userDetails.id === userId) {
-        setUserDetails({ ...userDetails, isBlocked: true })
-      }
-    })
-  }
-
-  // Handle unblock user
-  const handleUnblockUser = (userId: number) => {
-    unblockUser(userId, () => {
-      if (userDetails && userDetails.id === userId) {
-        setUserDetails({ ...userDetails, isBlocked: false })
-      }
-    })
-  }
-
-  // Handle mark as spam
-  const handleMarkAsSpam = (userId: number) => {
-    markAsSpam(userId, () => {
-      if (userDetails && userDetails.id === userId) {
-        setUserDetails({ ...userDetails, isSpam: true })
-      }
-    })
-  }
+      setMessages((prev) => prev.filter((msg) => msg.id !== messageId));
+    });
+    closeContextMenu();
+  };
 
   return (
     <>
       <WebPushSubscription />
-      <style jsx global>{messageAnimations}</style>
+      <style jsx global>
+        {messageAnimations}
+      </style>
       <div
         className={cn(
           "h-[calc(100vh-15rem)] flex bg-slate-900 text-white rounded-lg border border-slate-800 overflow-hidden",
@@ -363,7 +333,7 @@ export default function ChatInterface({ initialReceiverId = null }: { initialRec
           currentTheme === "blue" && "border-blue-500/20",
           currentTheme === "purple" && "border-purple-500/20",
           currentTheme === "amber" && "border-amber-500/20",
-          currentTheme === "rose" && "border-rose-500/20",
+          currentTheme === "rose" && "border-rose-500/20"
         )}
       >
         {(showContacts || !isMobile) && (
@@ -397,7 +367,9 @@ export default function ChatInterface({ initialReceiverId = null }: { initialRec
                 userDetails={userDetails}
               />
 
-              {showUserProfile && userDetails && <UserProfileCard user={userDetails} />}
+              {showUserProfile && userDetails && (
+                <UserProfileCard user={userDetails} />
+              )}
 
               <div className="px-4 py-2">
                 <MessageStatusBar
@@ -409,7 +381,10 @@ export default function ChatInterface({ initialReceiverId = null }: { initialRec
                 />
               </div>
 
-              <div className="flex-1 overflow-auto p-4" onContextMenu={(e) => e.preventDefault()}>
+              <div
+                className="flex-1 overflow-auto p-4"
+                onContextMenu={(e) => e.preventDefault()}
+              >
                 <MessageList
                   isLoading={isLoading}
                   isLoadingMore={isLoadingMore}
@@ -432,7 +407,10 @@ export default function ChatInterface({ initialReceiverId = null }: { initialRec
                       file={file}
                       onRemove={() => handleRemoveFile(index)}
                       uploadProgress={uploadProgress[file.name]}
-                      isUploading={uploadProgress[file.name] > 0 && uploadProgress[file.name] < 100}
+                      isUploading={
+                        uploadProgress[file.name] > 0 &&
+                        uploadProgress[file.name] < 100
+                      }
                       isError={uploadErrors[file.name]}
                     />
                   ))}
@@ -441,7 +419,10 @@ export default function ChatInterface({ initialReceiverId = null }: { initialRec
 
               <div className="p-3 border-t border-slate-800">
                 {isRecording ? (
-                  <VoiceRecorder onComplete={handleRecordingComplete} onCancel={() => setIsRecording(false)} />
+                  <VoiceRecorder
+                    onComplete={handleRecordingComplete}
+                    onCancel={() => setIsRecording(false)}
+                  />
                 ) : (
                   <MessageInput
                     message={message}
@@ -458,22 +439,16 @@ export default function ChatInterface({ initialReceiverId = null }: { initialRec
               </div>
             </>
           ) : (
-            <WelcomeScreen isMobile={isMobile} toggleContacts={toggleContacts} />
+            <WelcomeScreen
+              isMobile={isMobile}
+              toggleContacts={toggleContacts}
+            />
           )}
         </div>
       </div>
 
       {showSettingsModal && selectedContact && (
-        <ChatSettingsModal
-          user={selectedContact}
-          isOpen={showSettingsModal}
-          onClose={toggleSettingsModal}
-          onBlock={() => handleBlockUser(selectedContact.id)}
-          onUnblock={() => handleUnblockUser(selectedContact.id)}
-          onMarkAsSpam={() => handleMarkAsSpam(selectedContact.id)}
-          isBlocked={userDetails?.isBlocked || false}
-          isSpam={userDetails?.isSpam || false}
-        />
+        <ChatSettingsModal user={selectedContact} isOpen={showSettingsModal} />
       )}
 
       {contextMenuPosition && selectedMessage && (
@@ -489,8 +464,11 @@ export default function ChatInterface({ initialReceiverId = null }: { initialRec
       )}
 
       <div className="absolute bottom-4 right-4">
-        <ChatThemeSelector onSelectTheme={handleThemeChange} currentTheme={currentTheme} />
+        <ChatThemeSelector
+          onSelectTheme={handleThemeChange}
+          currentTheme={currentTheme}
+        />
       </div>
     </>
-  )
+  );
 }
