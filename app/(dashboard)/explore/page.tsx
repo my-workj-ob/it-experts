@@ -37,6 +37,7 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { RequestCard } from "./incoming/page";
+import Link from "next/link";
 
 export default function ExplorePage() {
   const [showFilters, setShowFilters] = useState(false);
@@ -498,13 +499,13 @@ export default function ExplorePage() {
                   <Users className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
                 </div>
                 <h3 className="text-lg font-medium mb-2">No connections yet</h3>
-                <p className="text-muted-foreground max-w-md mb-4">
-                  Start building your professional network by connecting with IT
-                  professionals.
-                </p>
-                <Button className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600">
-                  Find Connections
-                </Button>
+
+                <Link
+                  href={"/explore/incoming"}
+                  className="border border-emerald-500 p-2 rounded-full text-sm hover:bg-emerald-500 hover:text-white"
+                >
+                  View all connections
+                </Link>
               </div>
             )}
           </div>
