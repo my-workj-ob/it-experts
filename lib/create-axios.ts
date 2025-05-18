@@ -56,7 +56,7 @@ axiosInstance.interceptors.response.use(
       try {
         // Refresh token bilan yangi token olish
         const response = await axios.post(`${getApiUrl()}/auth/refresh-token`, {
-          refreshToken,
+          accessToken: refreshToken,
         });
 
         const { accessToken, refreshToken: newRefreshToken } = response.data;

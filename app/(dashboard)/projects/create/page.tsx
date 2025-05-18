@@ -24,7 +24,7 @@ import {
   createProject,
   projectStatuses,
   uploadFile,
-} from "@/services/portfolio-service";
+} from "@/services/project-service";
 import { Code, Github, Globe, Image, Tag, Upload, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import type React from "react";
@@ -76,7 +76,7 @@ interface Project {
   liveDemoUrl: string;
   ownProject: boolean;
 }
-export default function CreateProjectPage() {
+export default function CreateProect() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -88,11 +88,15 @@ export default function CreateProjectPage() {
     status: "",
     githubUrl: "",
     liveDemoUrl: "",
+    deadline: "",
+    teamSize: "",
   });
 
   // Separate state for tags and other complex fields
   const [tags, setTags] = useState<string[]>([]);
+  const [postionsTags, setPostionsTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState("");
+  const [positionTagInput, setPositionTagInput] = useState("");
   const [ownProduct, setOwnProduct] = useState(true);
 
   // Refs for file inputs
@@ -168,6 +172,28 @@ export default function CreateProjectPage() {
     if (e.key === "Enter" || e.key === ",") {
       e.preventDefault();
       handleTagAdd();
+    }
+  };
+
+  //   positionsTag
+  const handlePositionTagAdd = () => {
+    if (
+      positionTagInput.trim() &&
+      !postionsTags.includes(positionTagInput.trim())
+    ) {
+      setPostionsTags([...postionsTags, positionTagInput.trim()]);
+      setPositionTagInput("");
+    }
+  };
+
+  const handlePositionTagRemove = (tagToRemove: string) => {
+    setPostionsTags(postionsTags.filter((tag) => tag !== tagToRemove));
+  };
+
+  const handlePositionTagKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" || e.key === ",") {
+      e.preventDefault();
+      handlePositionTagAdd();
     }
   };
 
@@ -262,16 +288,15 @@ export default function CreateProjectPage() {
       const projectData = {
         title: formData.title,
         description: formData.description,
-        categoryId: formData.categoryId,
+        categoryId: Number(formData.categoryId),
+        teamSize: Number(formData.teamSize),
         status: formData.status,
         githubUrl: formData.githubUrl || "",
         liveDemoUrl: formData.liveDemoUrl || "",
-        tags: tags,
+        technologies: tags,
+        openPositions: postionsTags,
         ownProduct: ownProduct,
-        userId: 1, // You might want to get this from your auth context
-        views: 0,
-        likesCount: 0,
-        commentsCount: 0,
+        deadline: formData.deadline,
         imageUrl: coverImageUrl, // Add the cover image URL
         images: additionalImageUrls, // Add the additional image URLs
       };
@@ -281,7 +306,7 @@ export default function CreateProjectPage() {
 
       // Send the data to the server
       await createProject(projectData);
-      router.push("/portfolios"); // Redirect to projects page after successful creation
+      router.push("/projects"); // Redirect to projects page after successful creation
     } catch (error) {
       console.error("Error creating project:", error);
     } finally {
@@ -384,41 +409,79 @@ export default function CreateProjectPage() {
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="tags">Project Tags</Label>
-              <div className="flex gap-2">
-                <Input
-                  id="tagInput"
-                  value={tagInput}
-                  onChange={(e) => setTagInput(e.target.value)}
-                  onKeyDown={handleTagKeyDown}
-                  placeholder="Add tags separated by commas (e.g., React, TypeScript, API)"
-                  className="flex-1"
-                />
-                <Button type="button" onClick={handleTagAdd}>
-                  <Tag className="h-4 w-4 mr-2" />
-                  Add
-                </Button>
-              </div>
-              {tags.length > 0 && (
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {tags.map((tag) => (
-                    <div
-                      key={tag}
-                      className="flex items-center gap-1 bg-secondary text-secondary-foreground px-2 py-1 rounded-md text-sm"
-                    >
-                      {tag}
-                      <button
-                        type="button"
-                        onClick={() => handleTagRemove(tag)}
-                        className="text-secondary-foreground/70 hover:text-secondary-foreground"
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
-                    </div>
-                  ))}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <Label htmlFor="tags">Texnologies</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="tagInput"
+                    value={tagInput}
+                    onChange={(e) => setTagInput(e.target.value)}
+                    onKeyDown={handleTagKeyDown}
+                    placeholder="Add tags separated by commas (e.g., Frontend Developer, Data Scientist)"
+                    className="flex-1"
+                  />
+                  <Button type="button" onClick={handleTagAdd}>
+                    <Tag className="h-4 w-4 mr-2" />
+                    Add
+                  </Button>
                 </div>
-              )}
+                {tags.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {tags.map((tag) => (
+                      <div
+                        key={tag}
+                        className="flex items-center gap-1 bg-secondary text-secondary-foreground px-2 py-1 rounded-md text-sm"
+                      >
+                        {tag}
+                        <button
+                          type="button"
+                          onClick={() => handleTagRemove(tag)}
+                          className="text-secondary-foreground/70 hover:text-secondary-foreground"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="positions">Open Positons</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="positions"
+                    value={positionTagInput}
+                    onChange={(e) => setPositionTagInput(e.target.value)}
+                    onKeyDown={handlePositionTagKeyDown}
+                    placeholder="Add tags separated by commas (e.g., React, TypeScript, API)"
+                    className="flex-1"
+                  />
+                  <Button type="button" onClick={handlePositionTagAdd}>
+                    <Tag className="h-4 w-4 mr-2" />
+                    Add
+                  </Button>
+                </div>
+                {postionsTags.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {postionsTags.map((tag) => (
+                      <div
+                        key={tag}
+                        className="flex items-center gap-1 bg-secondary text-secondary-foreground px-2 py-1 rounded-md text-sm"
+                      >
+                        {tag}
+                        <button
+                          type="button"
+                          onClick={() => handlePositionTagRemove(tag)}
+                          className="text-secondary-foreground/70 hover:text-secondary-foreground"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="flex items-center space-x-2">
@@ -428,6 +491,37 @@ export default function CreateProjectPage() {
                 onCheckedChange={setOwnProduct}
               />
               <Label htmlFor="ownProduct">This is my own product/project</Label>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>team Size</CardTitle>
+            <CardDescription>Add project Team Size</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <Label htmlFor="teamSize">Team size</Label>
+                <Input
+                  id="teamSize"
+                  name="teamSize"
+                  type="number"
+                  onChange={handleInputChange}
+                  value={formData.teamSize}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="deadline">Deadline</Label>
+                <Input
+                  id="deadline"
+                  name="deadline"
+                  type="date"
+                  onChange={handleInputChange}
+                  value={formData.deadline}
+                />
+              </div>
             </div>
           </CardContent>
         </Card>

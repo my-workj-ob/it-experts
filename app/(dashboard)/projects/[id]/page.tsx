@@ -1,508 +1,287 @@
-"use client"
-
-import type React from "react"
-
-import { useState } from "react"
-import { useParams, useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Textarea } from "@/components/ui/textarea"
-import { Separator } from "@/components/ui/separator"
-import { Progress } from "@/components/ui/progress"
+"use client";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import {
   Calendar,
+  Users,
+  Briefcase,
   Clock,
-  Share2,
-  Bookmark,
-  ArrowLeft,
-  Send,
-  ThumbsUp,
-  Github,
-  Globe,
-  FileCode,
-  CheckCircle2,
-  AlertCircle,
-} from "lucide-react"
-import Link from "next/link"
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
+import { useParams } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
+import axiosInstance from "@/lib/create-axios";
+import { useRef, useCallback, useState, useEffect } from "react";
+import useEmblaCarousel from "embla-carousel-react";
 
-// Mock project data
-const mockProject = {
-  id: 1,
-  title: "E-commerce Platform",
-  description:
-    "Building a modern e-commerce platform with React, Node.js, and MongoDB. The platform will include features such as product listings, shopping cart, user authentication, payment processing, and an admin dashboard for managing products and orders.",
-  longDescription: `
-    <p>We're building a comprehensive e-commerce solution that will serve as a template for online stores. The platform is designed to be highly customizable, scalable, and user-friendly.</p>
-    
-    <h3>Key Features:</h3>
-    <ul>
-      <li>Responsive product catalog with advanced filtering and search</li>
-      <li>User authentication and profile management</li>
-      <li>Shopping cart and wishlist functionality</li>
-      <li>Secure checkout process with multiple payment options</li>
-      <li>Order tracking and history</li>
-      <li>Admin dashboard for inventory and order management</li>
-      <li>Analytics and reporting tools</li>
-      <li>API integration capabilities</li>
-    </ul>
-    
-    <h3>Technical Stack:</h3>
-    <p>We're using a modern MERN stack (MongoDB, Express, React, Node.js) with TypeScript for type safety. The frontend is built with Next.js for server-side rendering and optimal performance. For styling, we're using Tailwind CSS.</p>
-    
-    <h3>Project Timeline:</h3>
-    <p>The project is expected to take 3 months to complete, with the first month focused on core functionality, the second month on advanced features, and the third month on testing, optimization, and deployment.</p>
-  `,
-  skills: ["React", "Node.js", "MongoDB", "Express", "TypeScript", "Next.js", "Tailwind CSS", "Redux"],
-  category: "Web Development",
-  status: "In Progress",
-  progress: 65,
-  openPositions: [
-    { title: "Frontend Developer", filled: false, applicants: 4 },
-    { title: "UX Designer", filled: false, applicants: 2 },
-    { title: "Backend Developer", filled: true, applicants: 6 },
-  ],
-  teamSize: 4,
-  currentTeam: [
-    { id: 1, name: "Alex Johnson", role: "Project Lead", avatar: "/placeholder.svg?height=40&width=40" },
-    { id: 2, name: "Sarah Williams", role: "Backend Developer", avatar: "/placeholder.svg?height=40&width=40" },
-    { id: 3, name: "Michael Chen", role: "DevOps Engineer", avatar: "/placeholder.svg?height=40&width=40" },
-    { id: 4, name: "Emily Rodriguez", role: "Frontend Developer", avatar: "/placeholder.svg?height=40&width=40" },
-  ],
-  deadline: "2025-06-30",
-  startDate: "2025-03-15",
-  links: {
-    github: "https://github.com/example/ecommerce-platform",
-    website: "https://example-ecommerce.vercel.app",
-    figma: "https://figma.com/file/example",
-  },
-  image: "/placeholder.svg?height=400&width=800",
-  comments: [
-    {
-      id: 1,
-      user: { name: "David Kim", avatar: "/placeholder.svg?height=40&width=40" },
-      text: "This project looks interesting! I'm a frontend developer with experience in React and Next.js. Would love to contribute.",
-      date: "2 days ago",
-      likes: 3,
+export default function ProjectDetail() {
+  const params = useParams();
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["project", params?.id],
+    queryFn: async () => {
+      const res = await axiosInstance.get(`/projects/${params?.id}`);
+      return res.data;
     },
-    {
-      id: 2,
-      user: { name: "Lisa Patel", avatar: "/placeholder.svg?height=40&width=40" },
-      text: "I have some questions about the UX Designer role. What kind of experience are you looking for?",
-      date: "1 day ago",
-      likes: 1,
-    },
-  ],
-}
+    enabled: !!params?.id,
+  });
 
-export default function ProjectDetailPage() {
-  const params = useParams()
-  const router = useRouter()
-  const [comment, setComment] = useState("")
-  const [isApplying, setIsApplying] = useState(false)
-  const [selectedPosition, setSelectedPosition] = useState<string | null>(null)
+  // Carousel setup
+  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true });
+  const [selectedIndex, setSelectedIndex] = useState(0);
 
-  // In a real app, you would fetch the project data based on the ID
-  const project = mockProject
+  const scrollPrev = useCallback(
+    () => emblaApi && emblaApi.scrollPrev(),
+    [emblaApi]
+  );
+  const scrollNext = useCallback(
+    () => emblaApi && emblaApi.scrollNext(),
+    [emblaApi]
+  );
 
-  const handleApply = (position: string) => {
-    setSelectedPosition(position)
-    setIsApplying(true)
+  const onSelect = useCallback(() => {
+    if (!emblaApi) return;
+    setSelectedIndex(emblaApi.selectedScrollSnap());
+  }, [emblaApi]);
 
-    // In a real app, you would submit the application to your backend
-    setTimeout(() => {
-      setIsApplying(false)
-      // Show success message or redirect
-    }, 1500)
+  useEffect(() => {
+    if (!emblaApi) return;
+    emblaApi.on("select", onSelect);
+    onSelect();
+  }, [emblaApi, onSelect]);
+
+  if (isLoading) {
+    return (
+      <div className="max-w-6xl mx-auto p-6 bg-background min-h-screen flex items-center justify-center">
+        <p className="text-muted-foreground">Loading...</p>
+      </div>
+    );
   }
 
-  const handleSubmitComment = (e: React.FormEvent) => {
-    e.preventDefault()
-    // In a real app, you would submit the comment to your backend
-    setComment("")
+  if (error || !data) {
+    return (
+      <div className="max-w-6xl mx-auto p-6 bg-background min-h-screen flex items-center justify-center">
+        <p className="text-destructive">Error loading project details.</p>
+      </div>
+    );
   }
+
+  const {
+    title,
+    description,
+    technologies,
+    images,
+    user,
+    category,
+    deadline,
+    teamSize,
+    openPositions,
+    status,
+  } = data;
+
+  const deadlineDate = new Date(deadline);
+  const currentDate = new Date("2025-05-18T13:20:00+05:00");
+  const isDeadlinePassed = deadlineDate < currentDate;
+  const formattedDeadline = deadlineDate.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
 
   return (
-    <div className="container mx-auto py-8 space-y-8">
-      {/* Back button */}
-      <Button variant="ghost" size="sm" onClick={() => router.back()} className="mb-4">
-        <ArrowLeft className="mr-2 h-4 w-4" />
-        Back to Projects
-      </Button>
-
-      {/* Project header */}
-      <div className="relative">
-        <div className="w-full h-64 rounded-lg overflow-hidden">
-          <img src={project.image || "/placeholder.svg"} alt={project.title} className="w-full h-full object-cover" />
-        </div>
-
-        <div className="absolute bottom-4 left-4 flex gap-2">
-          <Badge className="bg-gradient-to-r from-primary/20 to-indigo-500/20 text-primary border-primary/30">
-            {project.category}
-          </Badge>
-          <Badge
-            className={
-              project.status === "In Progress"
-                ? "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-300 border-amber-200 dark:border-amber-800"
-                : project.status === "Recruiting"
-                  ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300 border-green-200 dark:border-green-800"
-                  : "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300 border-blue-200 dark:border-blue-800"
-            }
-          >
-            {project.status}
-          </Badge>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Main content */}
-        <div className="lg:col-span-2 space-y-6">
-          <div>
-            <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary to-indigo-600">
-              {project.title}
-            </h1>
-            <p className="text-muted-foreground mt-2">{project.description}</p>
-          </div>
-
-          <div className="flex flex-wrap gap-2">
-            {project.skills.map((skill) => (
-              <Badge key={skill} variant="secondary" className="font-normal">
-                {skill}
-              </Badge>
-            ))}
-          </div>
-
-          <Tabs defaultValue="details">
-            <TabsList>
-              <TabsTrigger value="details">Details</TabsTrigger>
-              <TabsTrigger value="team">Team</TabsTrigger>
-              <TabsTrigger value="discussion">Discussion</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="details" className="space-y-6 mt-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-lg">Timeline</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2">
-                      <div className="flex items-center">
-                        <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
-                        <span className="text-sm">Start Date: {new Date(project.startDate).toLocaleDateString()}</span>
-                      </div>
-                      <div className="flex items-center">
-                        <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
-                        <span className="text-sm">Deadline: {new Date(project.deadline).toLocaleDateString()}</span>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-lg">Progress</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2">
-                      <div className="flex justify-between">
-                        <span className="text-sm font-medium">{project.progress}% Complete</span>
-                      </div>
-                      <Progress value={project.progress} className="h-2" />
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Project Description</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div
-                    dangerouslySetInnerHTML={{ __html: project.longDescription }}
-                    className="prose dark:prose-invert max-w-none"
-                  />
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Project Links</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    {project.links.github && (
-                      <div className="flex items-center">
-                        <Github className="h-4 w-4 mr-2 text-muted-foreground" />
-                        <a
-                          href={project.links.github}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-sm text-primary hover:underline"
-                        >
-                          GitHub Repository
-                        </a>
-                      </div>
-                    )}
-                    {project.links.website && (
-                      <div className="flex items-center">
-                        <Globe className="h-4 w-4 mr-2 text-muted-foreground" />
-                        <a
-                          href={project.links.website}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-sm text-primary hover:underline"
-                        >
-                          Project Website
-                        </a>
-                      </div>
-                    )}
-                    {project.links.figma && (
-                      <div className="flex items-center">
-                        <FileCode className="h-4 w-4 mr-2 text-muted-foreground" />
-                        <a
-                          href={project.links.figma}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-sm text-primary hover:underline"
-                        >
-                          Design Files
-                        </a>
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="team" className="space-y-6 mt-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Current Team</CardTitle>
-                  <CardDescription>{project.currentTeam.length} team members</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {project.currentTeam.map((member) => (
-                      <div key={member.id} className="flex items-center gap-3">
-                        <Avatar>
-                          <AvatarImage src={member.avatar} alt={member.name} />
-                          <AvatarFallback>{member.name.substring(0, 2)}</AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <p className="font-medium">{member.name}</p>
-                          <p className="text-sm text-muted-foreground">{member.role}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Open Positions</CardTitle>
-                  <CardDescription>
-                    {project.openPositions.filter((p) => !p.filled).length} positions available
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {project.openPositions.map((position) => (
-                      <div key={position.title} className="flex items-center justify-between">
-                        <div>
-                          <p className="font-medium">{position.title}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {position.applicants} applicant{position.applicants !== 1 ? "s" : ""}
-                          </p>
-                        </div>
-                        {position.filled ? (
-                          <Badge variant="outline" className="bg-muted">
-                            <CheckCircle2 className="h-3 w-3 mr-1 text-green-500" />
-                            Filled
-                          </Badge>
-                        ) : (
-                          <Button
-                            size="sm"
-                            onClick={() => handleApply(position.title)}
-                            disabled={isApplying && selectedPosition === position.title}
-                          >
-                            {isApplying && selectedPosition === position.title ? "Applying..." : "Apply"}
-                          </Button>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="discussion" className="space-y-6 mt-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Discussion</CardTitle>
-                  <CardDescription>
-                    {project.comments.length} comment{project.comments.length !== 1 ? "s" : ""}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {project.comments.map((comment) => (
-                      <div key={comment.id} className="flex gap-3">
-                        <Avatar className="h-8 w-8">
-                          <AvatarImage src={comment.user.avatar} alt={comment.user.name} />
-                          <AvatarFallback>{comment.user.name.substring(0, 2)}</AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2">
-                            <p className="font-medium">{comment.user.name}</p>
-                            <p className="text-xs text-muted-foreground">{comment.date}</p>
-                          </div>
-                          <p className="text-sm mt-1">{comment.text}</p>
-                          <div className="flex items-center gap-2 mt-2">
-                            <Button variant="ghost" size="sm" className="h-6 px-2">
-                              <ThumbsUp className="h-3 w-3 mr-1" />
-                              {comment.likes}
-                            </Button>
-                            <Button variant="ghost" size="sm" className="h-6 px-2">
-                              Reply
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  <Separator className="my-4" />
-
-                  <form onSubmit={handleSubmitComment} className="space-y-4">
-                    <Textarea
-                      placeholder="Add a comment..."
-                      value={comment}
-                      onChange={(e) => setComment(e.target.value)}
-                      className="min-h-[100px]"
-                    />
-                    <div className="flex justify-end">
-                      <Button type="submit" disabled={!comment.trim()}>
-                        <Send className="h-4 w-4 mr-2" />
-                        Post Comment
-                      </Button>
-                    </div>
-                  </form>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
-        </div>
-
-        {/* Sidebar */}
-        <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Actions</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <Button className="w-full bg-gradient-to-r from-primary to-indigo-600 hover:from-primary/90 hover:to-indigo-600/90">
-                Apply to Project
-              </Button>
-              <div className="flex gap-2">
-                <Button variant="outline" className="flex-1">
-                  <Share2 className="h-4 w-4 mr-2" />
-                  Share
-                </Button>
-                <Button variant="outline" className="flex-1">
-                  <Bookmark className="h-4 w-4 mr-2" />
-                  Save
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Project Details</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">Category</span>
-                <span className="text-sm font-medium">{project.category}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">Status</span>
-                <span className="text-sm font-medium">{project.status}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">Team Size</span>
-                <span className="text-sm font-medium">{project.teamSize} members</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">Open Positions</span>
-                <span className="text-sm font-medium">{project.openPositions.filter((p) => !p.filled).length}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">Start Date</span>
-                <span className="text-sm font-medium">{new Date(project.startDate).toLocaleDateString()}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">Deadline</span>
-                <span className="text-sm font-medium">{new Date(project.deadline).toLocaleDateString()}</span>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Similar Projects</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="flex gap-3">
-                  <div className="h-12 w-12 rounded-md bg-muted flex-shrink-0 overflow-hidden">
+    <div className="max-w-6xl mx-auto p-6 bg-background min-h-screen">
+      <Card className="overflow-hidden">
+        {/* Carousel */}
+        <div className="relative">
+          <div className="overflow-hidden" ref={emblaRef}>
+            <div className="flex">
+              {images?.length > 0 ? (
+                images.map((image, index) => (
+                  <div key={index} className="flex-[0_0_100%] min-w-0">
                     <img
-                      src="/placeholder.svg?height=48&width=48"
-                      alt="Project thumbnail"
-                      className="h-full w-full object-cover"
+                      src={image}
+                      alt={`${title} image ${index + 1}`}
+                      className="w-full h-64 object-cover"
+                      onError={(e) => {
+                        e.target.src = "/fallback-image.jpg"; // Replace with your fallback image
+                      }}
                     />
                   </div>
-                  <div>
-                    <Link href={`/projects/${i + 1}`} className="font-medium hover:text-primary">
-                      {i === 0
-                        ? "Mobile Fitness App"
-                        : i === 1
-                          ? "AI Recommendation Engine"
-                          : "DevOps Automation Platform"}
-                    </Link>
-                    <p className="text-xs text-muted-foreground">
-                      {i === 0 ? "Mobile Development" : i === 1 ? "AI & Machine Learning" : "DevOps"}
-                    </p>
+                ))
+              ) : (
+                <div className="flex-[0_0_100%] min-w-0">
+                  <div className="w-full h-64 bg-muted flex items-center justify-center">
+                    <span className="text-muted-foreground">
+                      No images available
+                    </span>
                   </div>
                 </div>
-              ))}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Need Help?</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-start gap-3">
-                <AlertCircle className="h-5 w-5 text-muted-foreground mt-0.5" />
-                <div>
-                  <p className="text-sm">Have questions about this project?</p>
-                  <Button variant="link" className="h-auto p-0 text-primary">
-                    Contact Project Lead
-                  </Button>
-                </div>
+              )}
+            </div>
+          </div>
+          {images?.length > 1 && (
+            <>
+              <Button
+                variant="outline"
+                size="icon"
+                className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-background/80"
+                onClick={scrollPrev}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-background/80"
+                onClick={scrollNext}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+              {/* Carousel Dots */}
+              <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2">
+                {images.map((_, index) => (
+                  <button
+                    key={index}
+                    className={`w-2 h-2 rounded-full ${
+                      index === selectedIndex ? "bg-primary" : "bg-muted"
+                    }`}
+                    onClick={() => emblaApi && emblaApi.scrollTo(index)}
+                  />
+                ))}
               </div>
-            </CardContent>
-          </Card>
+            </>
+          )}
         </div>
-      </div>
-    </div>
-  )
-}
 
+        {/* Content */}
+        <CardHeader>
+          <div className="flex justify-between items-center">
+            <CardTitle className="text-3xl">{title}</CardTitle>
+            <Badge
+              variant={status === "In Progress" ? "default" : "secondary"}
+              className="text-sm"
+            >
+              {status}
+            </Badge>
+          </div>
+        </CardHeader>
+
+        <CardContent className="p-6">
+          {/* Description */}
+          <p className="text-muted-foreground mb-6">
+            {description || "No description provided."}
+          </p>
+
+          <Separator className="my-6" />
+
+          {/* Project Details Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="flex items-center space-x-3">
+              <Briefcase className="w-5 h-5 text-muted-foreground" />
+              <div>
+                <span className="text-sm text-muted-foreground">Category</span>
+                <p className="font-medium">{category?.name || "N/A"}</p>
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-3">
+              <Calendar className="w-5 h-5 text-muted-foreground" />
+              <div>
+                <span className="text-sm text-muted-foreground">Deadline</span>
+                <p
+                  className={`font-medium ${
+                    isDeadlinePassed ? "text-destructive" : ""
+                  }`}
+                >
+                  {formattedDeadline}
+                  {isDeadlinePassed && " (Expired)"}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-3">
+              <Users className="w-5 h-5 text-muted-foreground" />
+              <div>
+                <span className="text-sm text-muted-foreground">Team Size</span>
+                <p className="font-medium">{teamSize || "N/A"}</p>
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-3">
+              <Clock className="w-5 h-5 text-muted-foreground" />
+              <div>
+                <span className="text-sm text-muted-foreground">Status</span>
+                <p className="font-medium">{status || "N/A"}</p>
+              </div>
+            </div>
+          </div>
+
+          <Separator className="my-6" />
+
+          {/* Technologies */}
+          <div className="mb-6">
+            <h3 className="text-lg font-semibold mb-2">Technologies</h3>
+            <div className="flex flex-wrap gap-2">
+              {technologies?.length > 0 ? (
+                technologies.map((tech) => (
+                  <Badge key={tech} variant="outline">
+                    {tech.toUpperCase()}
+                  </Badge>
+                ))
+              ) : (
+                <p className="text-muted-foreground text-sm">
+                  No technologies listed.
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* Open Positions */}
+          <div className="mb-6">
+            <h3 className="text-lg font-semibold mb-2">Open Positions</h3>
+            <div className="flex flex-wrap gap-2">
+              {openPositions?.length > 0 ? (
+                openPositions.map((position) => (
+                  <Badge key={position} variant="default">
+                    {position}
+                  </Badge>
+                ))
+              ) : (
+                <p className="text-muted-foreground text-sm">
+                  No open positions.
+                </p>
+              )}
+            </div>
+          </div>
+
+          <Separator className="my-6" />
+
+          {/* User Info */}
+          <div className="flex items-center space-x-4">
+            <Avatar>
+              <AvatarFallback>
+                {user?.email[0]?.toUpperCase() || "U"}
+              </AvatarFallback>
+            </Avatar>
+            <div>
+              <h3 className="text-lg font-semibold">Project Owner</h3>
+              <p className="text-muted-foreground">{user?.email || "N/A"}</p>
+              <p className="text-sm text-muted-foreground">
+                Profile Views: {user?.profileViews || "0"}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Last Updated:{" "}
+                {user?.updatedAt
+                  ? new Date(user.updatedAt).toLocaleDateString("en-US")
+                  : "N/A"}
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}

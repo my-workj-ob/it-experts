@@ -64,7 +64,7 @@ export const createProject = async (projectData: any) => {
     console.log("Sending project data to server:", projectData);
 
     // Send the request to the server as JSON
-    const response = await axiosInstance.post("/projects", projectData);
+    const response = await axiosInstance.post("/portfolios", projectData);
 
     console.log("Server response:", response.data);
     return response.data;
@@ -77,7 +77,7 @@ export const createProject = async (projectData: any) => {
 // Get all projects
 export async function getProjects(): Promise<any> {
   try {
-    const response = await axiosInstance.get("/projects");
+    const response = await axiosInstance.get("/portfolios");
     return response.data;
   } catch (error) {
     console.error("Error fetching projects:", error);
@@ -88,7 +88,7 @@ export async function getProjects(): Promise<any> {
 // Get project by ID
 export async function getProjectById(id: string): Promise<any> {
   try {
-    const response = await axiosInstance.get(`/projects/${id}`);
+    const response = await axiosInstance.get(`/portfolios/${id}`);
     return response.data;
   } catch (error) {
     console.error("Error fetching project:", error);

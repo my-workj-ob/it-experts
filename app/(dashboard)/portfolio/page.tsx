@@ -1,46 +1,61 @@
-"use client"
+"use client";
 
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { getProjects } from "@/services/project-service"
-import { get, isNil } from "lodash"
-import { Eye, Github, Globe, MessageSquare, Plus, Search, Share2, ThumbsUp } from "lucide-react"
-import { useRouter } from "next/navigation"
-import { useEffect, useState } from "react"
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { getProjects } from "@/services/project-service";
+import { get, isNil } from "lodash";
+import {
+  Eye,
+  Github,
+  Globe,
+  MessageSquare,
+  Plus,
+  Search,
+  Share2,
+  ThumbsUp,
+} from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 export default function PortfolioPage() {
-  const router = useRouter()
-  const [projects, setProjects] = useState<any[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [searchQuery, setSearchQuery] = useState("")
+  const router = useRouter();
+  const [projects, setProjects] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     const fetchProjects = async () => {
       try {
-        const data = await getProjects()
-        setProjects(data || [])
+        const data = await getProjects();
+        setProjects(data || []);
       } catch (error) {
-        console.error("Error fetching projects:", error)
+        console.error("Error fetching projects:", error);
       } finally {
-        setIsLoading(false)
+        setIsLoading(false);
       }
-    }
+    };
 
-    fetchProjects()
-  }, [])
-
-  console.log(projects);
-
+    fetchProjects();
+  }, []);
 
   return (
     <div className="container mx-auto py-6 space-y-6">
       <div className="flex flex-col md:flex-row justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold">My Portfolio</h1>
-          <p className="text-muted-foreground">Showcase your projects and work experience</p>
+          <p className="text-muted-foreground">
+            Showcase your projects and work experience
+          </p>
         </div>
         <div className="flex gap-2">
           <div className="relative flex-1">
@@ -53,7 +68,10 @@ export default function PortfolioPage() {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          <Button variant="outline" onClick={() => router.push("/portfolio/discover")}>
+          <Button
+            variant="outline"
+            onClick={() => router.push("/portfolio/discover")}
+          >
             Discover Projects
           </Button>
           <Button onClick={() => router.push("/portfolio/create")}>
@@ -100,15 +118,33 @@ export default function PortfolioPage() {
                     />
                     <div className="absolute top-2 right-2 flex gap-2">
                       {!isNil(get(project, "githubUrl")) && (
-                        <Button size="icon" variant="secondary" className="h-8 w-8 rounded-full" asChild>
-                          <a href={get(project, "githubUrl")} target="_blank" rel="noopener noreferrer">
+                        <Button
+                          size="icon"
+                          variant="secondary"
+                          className="h-8 w-8 rounded-full"
+                          asChild
+                        >
+                          <a
+                            href={get(project, "githubUrl")}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
                             <Github className="h-4 w-4" />
                           </a>
                         </Button>
                       )}
                       {!isNil(get(project, "liveDemoUrl")) && (
-                        <Button size="icon" variant="secondary" className="h-8 w-8 rounded-full" asChild>
-                          <a href={get(project, "liveDemoUrl")} target="_blank" rel="noopener noreferrer">
+                        <Button
+                          size="icon"
+                          variant="secondary"
+                          className="h-8 w-8 rounded-full"
+                          asChild
+                        >
+                          <a
+                            href={get(project, "liveDemoUrl")}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
                             <Globe className="h-4 w-4" />
                           </a>
                         </Button>
@@ -117,7 +153,9 @@ export default function PortfolioPage() {
                   </div>
                   <CardHeader>
                     <CardTitle>{get(project, "title")}</CardTitle>
-                    <CardDescription>{get(project, "description")}</CardDescription>
+                    <CardDescription>
+                      {get(project, "description")}
+                    </CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="flex flex-wrap gap-2 mb-4">
@@ -153,7 +191,9 @@ export default function PortfolioPage() {
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center py-12 text-center">
-              <p className="text-muted-foreground mb-4">You haven&apos;t added any projects yet</p>
+              <p className="text-muted-foreground mb-4">
+                You haven&apos;t added any projects yet
+              </p>
               <Button onClick={() => router.push("/portfolio/create")}>
                 <Plus className="h-4 w-4 mr-2" />
                 Add Your First Project
@@ -166,7 +206,9 @@ export default function PortfolioPage() {
         <TabsContent value="web" className="mt-6">
           {/* Similar content as "all" but filtered for web projects */}
           <div className="flex flex-col items-center justify-center py-12 text-center">
-            <p className="text-muted-foreground mb-4">No web development projects found</p>
+            <p className="text-muted-foreground mb-4">
+              No web development projects found
+            </p>
             <Button onClick={() => router.push("/portfolio/create")}>
               <Plus className="h-4 w-4 mr-2" />
               Add Web Project
@@ -176,7 +218,9 @@ export default function PortfolioPage() {
 
         <TabsContent value="mobile" className="mt-6">
           <div className="flex flex-col items-center justify-center py-12 text-center">
-            <p className="text-muted-foreground mb-4">No mobile app projects found</p>
+            <p className="text-muted-foreground mb-4">
+              No mobile app projects found
+            </p>
             <Button onClick={() => router.push("/portfolio/create")}>
               <Plus className="h-4 w-4 mr-2" />
               Add Mobile Project
@@ -186,7 +230,9 @@ export default function PortfolioPage() {
 
         <TabsContent value="design" className="mt-6">
           <div className="flex flex-col items-center justify-center py-12 text-center">
-            <p className="text-muted-foreground mb-4">No UI/UX design projects found</p>
+            <p className="text-muted-foreground mb-4">
+              No UI/UX design projects found
+            </p>
             <Button onClick={() => router.push("/portfolio/create")}>
               <Plus className="h-4 w-4 mr-2" />
               Add Design Project
@@ -195,6 +241,5 @@ export default function PortfolioPage() {
         </TabsContent>
       </Tabs>
     </div>
-  )
+  );
 }
-
