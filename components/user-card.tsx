@@ -118,7 +118,7 @@ export default function UserCard({
             }`}
           >
             <AvatarImage
-              src={get(user, "avatar") || "/placeholder.svg"}
+              src={get(user, "avatar")}
               alt={get(user, "firstName")}
             />
             <AvatarFallback className="bg-gradient-to-br from-violet-500 to-purple-600 text-white">
