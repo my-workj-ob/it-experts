@@ -78,7 +78,7 @@ export function useChatSocket({
 
     console.log(`Initializing socket for user ${currentUserId}`);
 
-    const socket = io("http://localhost:8888/chat", {
+    const socket = io("https://tester-ajuz.onrender.com/chat", {
       transports: ["websocket", "polling"],
       withCredentials: true,
       // Removed forceNew to allow Socket.io to manage connection reuse
