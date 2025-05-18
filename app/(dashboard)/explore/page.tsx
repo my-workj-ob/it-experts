@@ -24,6 +24,7 @@ import axiosInstance from "@/lib/create-axios";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { get, isArray } from "lodash";
 import {
+  Bell,
   BriefcaseIcon,
   Filter,
   Flame,
@@ -340,7 +341,7 @@ export default function ExplorePage() {
             value="incoming_requests"
             className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 data-[state=active]:text-violet-600 dark:data-[state=active]:text-violet-400 data-[state=active]:shadow-sm rounded-md"
           >
-            <Handshake className="h-4 w-4 mr-2" />
+            <Bell className="h-4 w-4 mr-2" />
             Notification{" "}
             <span className="p-2 text-[10px] bg-muted-foreground  h-5 flex justify-center items-center text-white ml-2 rounded-full ">
               {request_incoming?.length}
