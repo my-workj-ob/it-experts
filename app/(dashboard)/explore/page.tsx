@@ -14,6 +14,12 @@ import {
 import { Slider } from "@/components/ui/slider";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import UserCard from "@/components/user-card";
+import useSocketNotification from "@/hooks/notification/use-socket-notification";
+import {
+  useNotifications,
+  useUnreadNotificationCount,
+} from "@/hooks/notification/useNotification";
+import useProfile from "@/hooks/profile/use-profile";
 import axiosInstance from "@/lib/create-axios";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { get, isArray } from "lodash";
@@ -29,12 +35,13 @@ import {
   Users,
   X,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { RequestCard } from "./incoming/page";
 
 export default function ExplorePage() {
   const [showFilters, setShowFilters] = useState(false);
   const [matchThreshold, setMatchThreshold] = useState([70]);
-
+  const { userProfileData } = useProfile();
   const { data, refetch } = useQuery({
     queryKey: ["explorer"],
     queryFn: async () => {
@@ -101,7 +108,10 @@ export default function ExplorePage() {
   const handleRequest = (data: any) => {
     connection.mutate(data, {
       onSuccess: () => {
+        incomingRefetch();
         refetch();
+        connectionsRefetch();
+        outgoingRefetch();
       },
     });
   };
@@ -109,7 +119,10 @@ export default function ExplorePage() {
   const handleRemoveConnection = (data: any) => {
     removeConnection.mutate(data, {
       onSuccess: () => {
+        incomingRefetch();
         refetch();
+        connectionsRefetch();
+        outgoingRefetch();
       },
     });
   };
@@ -117,10 +130,27 @@ export default function ExplorePage() {
   const handleAccept = (data: any) => {
     acceptConnection.mutate(data, {
       onSuccess: () => {
+        incomingRefetch();
         refetch();
+        connectionsRefetch();
+        outgoingRefetch();
       },
     });
   };
+
+  const {
+    data: request_incoming,
+    isLoading,
+    refetch: incomingRefetch,
+  } = useQuery({
+    queryKey: ["connections_requests_incoming"],
+    queryFn: async () => {
+      const response = await axiosInstance.get(
+        "/connections/requests/incoming"
+      );
+      return response.data;
+    },
+  });
 
   return (
     <div className="container mx-auto py-8 space-y-8">
@@ -305,6 +335,16 @@ export default function ExplorePage() {
             <Handshake className="h-4 w-4 mr-2" />
             Connections
           </TabsTrigger>
+          <TabsTrigger
+            value="incoming_requests"
+            className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 data-[state=active]:text-violet-600 dark:data-[state=active]:text-violet-400 data-[state=active]:shadow-sm rounded-md"
+          >
+            <Handshake className="h-4 w-4 mr-2" />
+            Notification{" "}
+            <span className="p-2 text-[10px] bg-muted-foreground  h-5 flex justify-center items-center text-white ml-2 rounded-full ">
+              {request_incoming?.length}
+            </span>
+          </TabsTrigger>
         </TabsList>
 
         {/* Recommended tab content */}
@@ -414,6 +454,42 @@ export default function ExplorePage() {
                       return handleAccept(get(user, "id"));
                     }
                   }}
+                />
+              ))
+            ) : (
+              <div className="col-span-full flex flex-col items-center justify-center py-16 text-center">
+                <div className="rounded-full bg-emerald-100 dark:bg-emerald-900/30 p-3 mb-4">
+                  <Users className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
+                </div>
+                <h3 className="text-lg font-medium mb-2">No connections yet</h3>
+                <p className="text-muted-foreground max-w-md mb-4">
+                  Start building your professional network by connecting with IT
+                  professionals.
+                </p>
+                <Button className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600">
+                  Find Connections
+                </Button>
+              </div>
+            )}
+          </div>
+        </TabsContent>
+        <TabsContent value="incoming_requests" className="mt-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {request_incoming?.length > 0 ? (
+              request_incoming.map((user: any) => (
+                <RequestCard
+                  key={user.id}
+                  request={user}
+                  onAccept={() => handleAccept(user.id)}
+                  onReject={() => handleRemoveConnection(user.id)}
+                  isAccepting={
+                    acceptConnection.isPending &&
+                    acceptConnection.variables === user.id
+                  }
+                  isRejecting={
+                    removeConnection.isPending &&
+                    removeConnection.variables === user.id
+                  }
                 />
               ))
             ) : (
