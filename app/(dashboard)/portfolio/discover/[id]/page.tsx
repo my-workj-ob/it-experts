@@ -33,7 +33,7 @@ import { useEffect, useState } from "react";
 // Function to get project details by ID
 const getProjectDetails = async (id: string) => {
   try {
-    const response = await axiosInstance.get(`/projects/${id}`);
+    const response = await axiosInstance.get(`/portfolios/${id}`);
     return response.data;
   } catch (error) {
     console.error("Error fetching project details:", error);
@@ -44,7 +44,7 @@ const getProjectDetails = async (id: string) => {
 // Function to get related projects by the same author
 const getAuthorProjects = async (userId: string) => {
   try {
-    const response = await axiosInstance.get(`/projects/${userId}`);
+    const response = await axiosInstance.get(`/portfolios/${userId}`);
     return response.data;
   } catch (error) {
     console.error("Error fetching author projects:", error);
@@ -201,7 +201,7 @@ export default function DiscoverProjectDetailPage() {
     try {
       const ProjectLikeStatus = async () => {
         const res = await axiosInstance.get(
-          `/projects/${id}/like/status?userId=${get(userProfileData, "id")}`
+          `/portfolios/${id}/like/status?userId=${get(userProfileData, "id")}`
         );
 
         setLikeStatus(res.data);
@@ -287,14 +287,14 @@ export default function DiscoverProjectDetailPage() {
     };
 
     fetchProjectData();
-  }, [id, likeLoading, commentLike]);
+  }, [id, likeComment, likeLoading, commentLike]);
 
   const handleLike = async () => {
     try {
       setIsLikeLoading(true);
       setIsLiked(!isLiked);
       // In a real app, you would call an API to update the like status
-      await axiosInstance.post(`/projects/${id}/like`, { liked: !isLiked });
+      await axiosInstance.post(`/portfolios/${id}/like`, { liked: !isLiked });
 
       if (!isLiked) {
         setProject(project);
@@ -311,7 +311,7 @@ export default function DiscoverProjectDetailPage() {
     try {
       setIsBookmarked(!isBookmarked);
       // In a real app, you would call an API to update the bookmark status
-      await axiosInstance.post(`/projects/${id}/bookmark`, {
+      await axiosInstance.post(`/portfolios/${id}/bookmark`, {
         bookmarked: !isBookmarked,
       });
     } catch (error) {
