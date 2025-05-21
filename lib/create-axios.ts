@@ -1,10 +1,16 @@
-import axios from "axios";
-// ok
-const getApiUrl = () => {
+"use client";
+import axios, {
+  AxiosError,
+  AxiosInstance,
+  InternalAxiosRequestConfig,
+} from "axios";
+
+// Dynamic baseURL olish
+const getApiUrl = (): string => {
   if (typeof window !== "undefined") {
     const hostname = window.location.hostname;
     if (hostname === "localhost") {
-      return "http://localhost:8888"; // Local development
+      return "http://localhost:8888"; // Local
     } else if (hostname === "staging.example.com") {
       return "https://tester-nu-two.vercel.app"; // Staging
     } else {
@@ -15,7 +21,7 @@ const getApiUrl = () => {
 };
 
 // Axios instance yaratish
-export const axiosInstance = axios.create({
+export const axiosInstance: AxiosInstance = axios.create({
   baseURL: getApiUrl(),
   headers: {
     "Content-Type": "application/json",
@@ -23,66 +29,118 @@ export const axiosInstance = axios.create({
   withCredentials: true,
 });
 
-// Request interceptor (har bir so‘rov oldidan token qo‘shish)
+// Token helperlar
+const getAccessToken = (): string | null => localStorage.getItem("accessToken");
+const getRefreshToken = (): string | null =>
+  localStorage.getItem("refreshToken");
+const setAccessToken = (token: string): void =>
+  localStorage.setItem("accessToken", token);
+const setRefreshToken = (token: string): void =>
+  localStorage.setItem("refreshToken", token);
+
+// Request interceptor
 axiosInstance.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem("accessToken");
+  (config: InternalAxiosRequestConfig) => {
+    const token = getAccessToken();
     if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+      config.headers.set("Authorization", `Bearer ${token}`);
     }
     return config;
   },
-  (error) => Promise.reject(error)
+  (error: AxiosError) => Promise.reject(error)
 );
+// Refresh token queue logikasi (agar bir nechta request parallel bo‘lsa)
+let isRefreshing = false;
+let failedQueue: {
+  resolve: (token: string) => void;
+  reject: (error: AxiosError) => void;
+}[] = [];
 
-// Response interceptor (401 bo‘lsa, tokenni yangilash)
+const processQueue = (
+  error: AxiosError | null,
+  token: string | null = null
+) => {
+  failedQueue.forEach((prom) => {
+    if (error) {
+      prom.reject(error);
+    } else if (token) {
+      prom.resolve(token);
+    }
+  });
+  failedQueue = [];
+};
+
+// Response interceptor
 axiosInstance.interceptors.response.use(
   (response) => response,
-  async (error) => {
-    const originalRequest = error.config;
+  async (error: AxiosError) => {
+    const originalRequest: any = error.config;
 
-    // Agar 401 bo‘lsa va oldin token yangilashga harakat qilmagan bo‘lsak
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
+    if (error.response?.status === 404) return Promise.reject(error);
 
-      const refreshToken = localStorage.getItem("refreshToken");
-
-      // **Agar refresh token yo‘q bo‘lsa yoki user allaqachon login sahifasida bo‘lsa, hech narsa qilmaymiz**
-      if (!refreshToken || window.location.pathname === "/login") {
-        console.warn("Refresh token yo‘q yoki allaqachon login sahifasidasiz.");
-        return Promise.reject(error);
+    if (
+      error.response?.status === 401 &&
+      !originalRequest._retry &&
+      typeof window !== "undefined"
+    ) {
+      if (
+        typeof window !== "undefined" &&
+        window.location.pathname === "/login"
+      ) {
+        return Promise.reject(error); // Refresh harakatini bu sahifada bajarma
+      }
+      if (!getRefreshToken()) {
+        if (window.location.pathname !== "/") {
+          window.location.href = "/login";
+        }
+        throw new Error("Refresh token yo'q");
+      }
+      if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+          failedQueue.push({
+            resolve: (token: string) => {
+              originalRequest.headers["Authorization"] = `Bearer ${token}`;
+              resolve(axiosInstance(originalRequest));
+            },
+            reject: (err: AxiosError) => reject(err),
+          });
+        });
       }
 
+      originalRequest._retry = true;
+      isRefreshing = true;
+
       try {
-        // Refresh token bilan yangi token olish
-        const response = await axios.post(`${getApiUrl()}/auth/refresh-token`, {
+        const refreshToken = getRefreshToken();
+        const { data } = await axios.post(`${getApiUrl()}/auth/refresh-token`, {
           accessToken: refreshToken,
         });
 
-        const { accessToken, refreshToken: newRefreshToken } = response.data;
+        const newAccessToken = data.accessToken;
+        const newRefreshToken = data.refreshToken;
 
-        // Yangi tokenlarni saqlash
-        localStorage.setItem("accessToken", accessToken);
-        if (newRefreshToken)
-          localStorage.setItem("refreshToken", newRefreshToken);
+        if (newAccessToken) setAccessToken(newAccessToken);
+        if (newRefreshToken) setRefreshToken(newRefreshToken);
 
-        // Eski so‘rovni qayta jo‘natish
-        originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+        processQueue(null, newAccessToken);
+        originalRequest.headers["Authorization"] = `Bearer ${newAccessToken}`;
         return axiosInstance(originalRequest);
-      } catch (refreshError) {
-        // Agar refresh token ishlamasa, foydalanuvchini tashqariga chiqaramiz
-        console.warn(
-          "Refresh token ishlamadi, foydalanuvchi tashqariga chiqarildi."
-        );
-        // localStorage.removeItem('accessToken');
-        // localStorage.removeItem('refreshToken');
+      } catch (refreshError: any) {
+        processQueue(refreshError, null);
 
-        // **Agar hozir login sahifasida bo‘lsa, yana /login sahifasiga yo‘naltirmaymiz**
-        if (window.location.pathname !== "/login") {
-          // window.location.href = '/login';
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
+        if (
+          (typeof window !== "undefined" &&
+            window.location.pathname === "/login") ||
+          window.location.pathname !== "/"
+        ) {
+          return Promise.reject(error); // Refresh harakatini bu sahifada bajarma
         }
 
         return Promise.reject(refreshError);
+      } finally {
+        isRefreshing = false;
       }
     }
 

@@ -15,6 +15,8 @@ import {
   ArrowLeft,
   Bookmark,
   CheckCircle,
+  ChevronLeft,
+  ChevronRight,
   Eye,
   Github,
   Globe,
@@ -28,7 +30,8 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import useEmblaCarousel from "embla-carousel-react";
 
 // Function to get project details by ID
 const getProjectDetails = async (id: string) => {
@@ -197,6 +200,10 @@ export default function DiscoverProjectDetailPage() {
 
   const [likeStatus, setLikeStatus] = useState<boolean>();
   const [commentLike, setCommentLike] = useState(false);
+
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true });
+
   useEffect(() => {
     try {
       const ProjectLikeStatus = async () => {
@@ -402,6 +409,28 @@ export default function DiscoverProjectDetailPage() {
     return project?.userId === userId;
   };
 
+  // Carousel setup
+
+  const scrollPrev = useCallback(
+    () => emblaApi && emblaApi.scrollPrev(),
+    [emblaApi]
+  );
+  const scrollNext = useCallback(
+    () => emblaApi && emblaApi.scrollNext(),
+    [emblaApi]
+  );
+
+  const onSelect = useCallback(() => {
+    if (!emblaApi) return;
+    setSelectedIndex(emblaApi.selectedScrollSnap());
+  }, [emblaApi]);
+
+  useEffect(() => {
+    if (!emblaApi) return;
+    emblaApi.on("select", onSelect);
+    onSelect();
+  }, [emblaApi, onSelect]);
+
   if (isLoading) {
     return (
       <div className="container mx-auto py-8">
@@ -492,8 +521,6 @@ export default function DiscoverProjectDetailPage() {
       return `${Math.floor(diffInSeconds / 86400)} days ago`;
     return formatDate(dateString);
   };
-  console.log(comments);
-
   return (
     <div className="container mx-auto py-8">
       <div className="flex items-center mb-6">
@@ -542,18 +569,65 @@ export default function DiscoverProjectDetailPage() {
         <div className="md:col-span-2">
           <Card>
             <CardContent className="p-0">
-              <img
-                src={get(project, "imageUrl") || "/placeholder.svg"}
-                alt={get(project, "title", "Project Image")}
-                className="w-full h-[400px] object-cover rounded-t-lg"
-              />
-              <div className="p-6">
-                <h2 className="text-2xl font-bold mb-4">
-                  {get(project, "title")}
-                </h2>
-                <p className="text-gray-500 dark:text-gray-400 mb-6">
-                  {get(project, "title")}
-                </p>
+              <div className="relative">
+                <div className="overflow-hidden" ref={emblaRef}>
+                  <div className="flex">
+                    {project?.images?.length > 0 ? (
+                      project?.images?.map((image: any, index: any) => (
+                        <div key={index} className="flex-[0_0_100%] min-w-0">
+                          <img
+                            src={image}
+                            alt={`${image?.title} image ${index + 1}`}
+                            className="w-full h-64  object-cover"
+                            onError={(e) => {
+                              e.target.src = "/fallback-image.jpg"; // Replace with your fallback image
+                            }}
+                          />
+                        </div>
+                      ))
+                    ) : (
+                      <div className="flex-[0_0_100%] min-w-0">
+                        <div className="w-full h-64 bg-muted flex items-center justify-center">
+                          <span className="text-muted-foreground">
+                            No images available
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                {project?.images?.length > 1 && (
+                  <>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-background/80"
+                      onClick={scrollPrev}
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-background/80"
+                      onClick={scrollNext}
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                    {/* Carousel Dots */}
+                    <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2">
+                      {project?.images.map((_: any, index: number) => (
+                        <button
+                          key={index}
+                          className={`w-2 h-2 rounded-full ${
+                            index === selectedIndex ? "bg-primary" : "bg-muted"
+                          }`}
+                          onClick={() => emblaApi && emblaApi.scrollTo(index)}
+                        />
+                      ))}
+                    </div>
+                  </>
+                )}
 
                 <Tabs defaultValue="description">
                   <TabsList className="mb-4">
@@ -597,14 +671,16 @@ export default function DiscoverProjectDetailPage() {
                   </TabsContent>
                   <TabsContent value="gallery">
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                      {project?.images?.map((image: any, index: number) => (
-                        <img
-                          key={index}
-                          src={image.fileUrl || "/placeholder.svg"}
-                          alt={`Project image ${index + 1}`}
-                          className="rounded-md object-cover w-full h-40"
-                        />
-                      ))}
+                      {project?.project?.images?.map(
+                        (image: any, index: number) => (
+                          <img
+                            key={index}
+                            src={image.fileUrl || "/placeholder.svg"}
+                            alt={`Project image ${index + 1}`}
+                            className="rounded-md object-cover w-full h-40"
+                          />
+                        )
+                      )}
                     </div>
                   </TabsContent>
                 </Tabs>

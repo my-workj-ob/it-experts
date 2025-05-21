@@ -1,20 +1,26 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { Inter } from "next/font/google"
-import { ThemeProvider } from "@/components/theme-provider"
-import Navbar from "@/components/navbar"
-import Sidebar from "@/components/sidebar"
-import "./globals.css"
-import { usePathname } from "next/navigation"
+import type React from "react";
+import { Inter } from "next/font/google";
+import { ThemeProvider } from "@/components/theme-provider";
+import Navbar from "@/components/navbar";
+import Sidebar from "@/components/sidebar";
+import "./globals.css";
+import { usePathname } from "next/navigation";
+import { useEffect } from "react";
+import { initializeOneSignal } from "@/lib/one-signal";
 
-const inter = Inter({ subsets: ["latin"] })
+const inter = Inter({ subsets: ["latin"] });
 
 export default function ClientLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
+  useEffect(() => {
+    initializeOneSignal();
+  }, []);
+
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
@@ -23,16 +29,16 @@ export default function ClientLayout({
         </ThemeProvider>
       </body>
     </html>
-  )
+  );
 }
 
 // Client component to handle path-based layout changes
 function MainLayout({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname()
+  const pathname = usePathname();
 
   // Don't show sidebar and navbar on landing page, login, and register pages
   if (pathname === "/" || pathname === "/login" || pathname === "/register") {
-    return <>{children}</>
+    return <>{children}</>;
   }
 
   return (
@@ -43,6 +49,5 @@ function MainLayout({ children }: { children: React.ReactNode }) {
         <main className="flex-1 p-4 md:p-6">{children}</main>
       </div>
     </div>
-  )
+  );
 }
-
