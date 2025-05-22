@@ -1,10 +1,11 @@
 import { io, Socket } from 'socket.io-client';
 
 let socket: Socket | null = null;
-
+// https://tester-ajuz.onrender.com
+// http://localhost:8888
 if (typeof window !== 'undefined') {
 	const token = localStorage.getItem('accessToken');
-	socket = io('https://tester-ajuz.onrender.com/notifications', {
+	socket = io('http://localhost:8888/notifications', {
 		auth: {
 			token,
 		},
